@@ -15,7 +15,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>nl.beng.gtaa.commons</groupId>
-			<artifactId>gta-commons</artifactId>
+			<artifactId>gtaa-commons</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
@@ -132,35 +132,5 @@
 				<filtering>true</filtering>
 			</resource>
 		</resources>
-		<plugins>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>build-helper-maven-plugin</artifactId>
-				<version>1.8</version>
-				<executions>
-					<execution>
-						<id>attach-artifacts</id>
-						<phase>package</phase>
-						<goals>
-							<goal>attach-artifact</goal>
-						</goals>
-<!-- 						<configuration>
-							<artifacts>
-								<artifact>
-									<file>${basedir}/src/main/resources/channels_settings.json</file>
-									<type>json</type>
-									<classifier>settings</classifier>
-								</artifact>
-								<artifact>
-									<file>${basedir}/src/main/resources/channels_mappings.json</file>
-									<type>json</type>
-									<classifier>mappings</classifier>
-								</artifact>
-							</artifacts>
-						</configuration>
- -->					</execution>
-				</executions>
-			</plugin>
-		</plugins>
 	</build>
 </project>

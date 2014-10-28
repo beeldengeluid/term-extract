@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:elasticsearch="http://www.springframework.org/schema/data/elasticsearch"
+       xsi:schemaLocation=
+               "http://www.springframework.org/schema/data/elasticsearch http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.0.xsd
+                http://www.springframework.org/schema/beans	http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+                http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+                http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.1.xsd">
+
+
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="ignoreResourceNotFound" value="true"/>
+        <property name="searchSystemEnvironment" value="true"/>
+        <property name="systemPropertiesMode" value="2"/>
+        <property name="placeholderPrefix" value="${"/>
+        <property name="locations">
+            <list>
+                <value>classpath:/gtaa-indexer.properties</value>
+                <value>file:${user.home}/appdata/gtaa-indexer/config/gtaa-indexer.properties</value>
+                <value>file:${config.dir}/gtaa-indexer.properties</value>
+            </list>
+        </property>
+    </bean>
+
+
+    <context:component-scan base-package="nl.beng.gtaa.indexer"/>
+    <context:component-scan base-package="nl.beng.gtaa.model"/>
+    
+    <elasticsearch:repositories base-package="nl.beng.gtaa.indexer"/>
+
+    <elasticsearch:transport-client id="client" cluster-nodes="${nl.beng.gtaa.indexer.elasticsearch.nodes}" cluster-name="${nl.beng.gtaa.indexer.elasticsearch.clustername}" />
+
+    <bean name="elasticsearchTemplate" class="org.springframework.data.elasticsearch.core.ElasticsearchTemplate">
+        <constructor-arg name="client" ref="client"/>
+    </bean>
+
+
+    
+</beans>
