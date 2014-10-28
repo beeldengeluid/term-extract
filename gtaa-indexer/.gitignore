@@ -1,0 +1,5 @@
+/target
+/bin
+
+#elasticsearch unit test
+/data
