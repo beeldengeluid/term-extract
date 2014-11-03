@@ -3,16 +3,15 @@ package nl.beng.termextract.extractor.service;
 import java.util.List;
 import java.util.Set;
 
-import nl.beng.termextract.extractor.model.Term;
-
 public interface ExtractorService {
 
 	/**
 	 * Extracts per text in <code>texts</code> the terms in the text.
 	 * 
 	 * @param texts
-	 * @return A list with a set of {@link Term} 
+	 * @param settings
+	 * @return A list with a set of {@link Term}
+	 * @throws ExtractionException
 	 */
-	List<Set<Term>> extract(List<String> texts);
-
+	List<Set<Term>> extract(List<String> texts, Settings settings) throws ExtractionException;
 }

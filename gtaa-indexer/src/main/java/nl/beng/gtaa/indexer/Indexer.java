@@ -4,6 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import nl.beng.gtaa.model.GtaaDocument;
+import nl.beng.gtaa.model.GtaaType;
 
 import org.apache.commons.lang.StringUtils;
 import org.dom4j.Attribute;
@@ -12,7 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.context.support.FileSystemXmlApplicationContext;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.stereotype.Component;
@@ -25,6 +26,11 @@ import se.kb.oai.pmh.RecordsList;
 @Component(value = "indexer")
 public class Indexer {
 
+	private static final String GTAA_GEOGRAFISCHE_NAMEN_SCHEME = "http://data.beeldengeluid.nl/gtaa/GeografischeNamen";
+	private static final String GTAA_NAMEN_SCHEME = "http://data.beeldengeluid.nl/gtaa/Namen";
+	private static final String GTAA_PERSOONSNAMEN_SCHEME = "http://data.beeldengeluid.nl/gtaa/Persoonsnamen";
+	private static final String GTAA_ONDERWERPEN_SCHEME = "http://data.beeldengeluid.nl/gtaa/Onderwerpen";
+	private static final String GTAA_SCHEME = "data.beeldengeluid.nl/gtaa";
 	private static final String IN_SCHEME_ELEMENT = "inScheme";
 	private static final String PREF_LABEL_ELEMENT = "prefLabel";
 	private static final String ALT_LABEL_ELEMENT = "altLabel";
@@ -34,11 +40,11 @@ public class Indexer {
 
 	@Autowired
 	private ElasticsearchTemplate template;
-	@Value("${nl.beng.gtaa.indexer.oai.server.url}")
+	@Value("${nl.beng.gtaa.oai.server.url}")
 	private String oaiPmhServerUrl;
-	@Value("${nl.beng.gtaa.indexer.oai.metadata.prefix}")
+	@Value("${nl.beng.gtaa.oai.metadata.prefix}")
 	private String metaDataPrefix;
-	@Value("${nl.beng.gtaa.indexer.elasticsearch.index.name}")
+	@Value("${nl.beng.gtaa.elasticsearch.index.name}")
 	private String indexName;
 
 	public void index() {
@@ -104,20 +110,45 @@ public class Indexer {
 			Attribute uriAttribute = data.attribute(URI_ATTRIBUTE);
 			if (uriAttribute != null
 					&& StringUtils.isNotEmpty(uriAttribute.getText())) {
-				gtaaDocument = new GtaaDocument();
-				String uri = data.attribute(URI_ATTRIBUTE).getText();
-				gtaaDocument.setId(uri.replaceAll("/", "_"));
-				gtaaDocument.setUri(uri);
-				gtaaDocument.setAltLabel(extractTextFromElements(data
-						.elements(ALT_LABEL_ELEMENT)));
-				gtaaDocument.setPrefLabel(extractTextFromElements(data
-						.elements(PREF_LABEL_ELEMENT)));
-				gtaaDocument.setConceptScheme(extractConceptScheme(data
-						.elements(IN_SCHEME_ELEMENT)));
+				String conceptScheme = extractConceptScheme(data
+						.elements(IN_SCHEME_ELEMENT));
+				GtaaType type = extractGtaaType(conceptScheme);
+				if (type != null) {
+					gtaaDocument = new GtaaDocument();
+					String uri = data.attribute(URI_ATTRIBUTE).getText();
+					gtaaDocument.setType(type);
+					gtaaDocument.setId(uri.replaceAll("/", "_"));
+					gtaaDocument.setUri(uri);
+					gtaaDocument.setAltLabel(extractTextFromElements(data
+							.elements(ALT_LABEL_ELEMENT)));
+					gtaaDocument.setPrefLabel(extractTextFromElements(data
+							.elements(PREF_LABEL_ELEMENT)));
+					gtaaDocument.setConceptScheme(conceptScheme);
+				}
 			}
 
 		}
 		return gtaaDocument;
+	}
+
+	private GtaaType extractGtaaType(String conceptScheme) {
+		if (StringUtils.isNotEmpty(conceptScheme)) {
+			if (conceptScheme.contains(GTAA_SCHEME)) {
+				for (String scheme : conceptScheme.split(" ")) {
+					if (GTAA_ONDERWERPEN_SCHEME.equals(scheme)) {
+						return GtaaType.ONDERWERPEN;
+					} else if (GTAA_PERSOONSNAMEN_SCHEME.equals(scheme)) {
+						return GtaaType.PERSOONSNAMEN;
+					} else if (GTAA_NAMEN_SCHEME.equals(scheme)) {
+						return GtaaType.NAMEN;
+					} else if (GTAA_GEOGRAFISCHE_NAMEN_SCHEME.equals(scheme)) {
+						return GtaaType.GEOGRAFISCHENAMEN;
+					}
+
+				}
+			}
+		}
+		return null;
 	}
 
 	private String extractConceptScheme(List<Element> elements) {
@@ -161,10 +192,14 @@ public class Indexer {
 	}
 
 	public static void main(String[] args) {
-		ClassPathXmlApplicationContext context = null;
+		String contextFile = "./src/main/resources/application-context.xml";
+		if (args.length >= 1) {
+			contextFile = args[0];
+
+		}
+		FileSystemXmlApplicationContext context = null;
 		try {
-			context = new ClassPathXmlApplicationContext(
-					"application-context.xml");
+			context = new FileSystemXmlApplicationContext(contextFile);
 			Indexer indexer = (Indexer) context.getBean("indexer");
 			indexer.index();
 		} finally {

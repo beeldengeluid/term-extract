@@ -11,21 +11,19 @@
                 http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.2.xsd">
 
    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
-        <property name="ignoreResourceNotFound" value="true"/>
+        <property name="ignoreResourceNotFound" value="false"/>
         <property name="searchSystemEnvironment" value="true"/>
         <property name="systemPropertiesMode" value="2"/>
         <property name="placeholderPrefix" value="${"/>
         <property name="locations">
             <list>
-                <value>classpath:/extractor.properties</value>
-                <value>file:${user.home}/appdata/extractor/config/extractor.properties</value>
                 <value>file:${config.dir}/extractor.properties</value>
             </list>
         </property>
     </bean>
 
     <context:component-scan base-package="nl.beng.termextract.extractor.rest"/>
-    <context:component-scan base-package="nl.beng.termextract.extractor.service"/>
+	<context:component-scan base-package="nl.beng.termextract.extractor.service" />
     <mvc:annotation-driven/>
 
 </beans>

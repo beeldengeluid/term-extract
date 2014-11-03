@@ -31,7 +31,7 @@
     
     <elasticsearch:repositories base-package="nl.beng.gtaa.indexer"/>
 
-    <elasticsearch:transport-client id="client" cluster-nodes="${nl.beng.gtaa.indexer.elasticsearch.nodes}" cluster-name="${nl.beng.gtaa.indexer.elasticsearch.clustername}" />
+    <elasticsearch:transport-client id="client" cluster-nodes="${nl.beng.gtaa.elasticsearch.nodes}" cluster-name="${nl.beng.gtaa.elasticsearch.clustername}" />
 
     <bean name="elasticsearchTemplate" class="org.springframework.data.elasticsearch.core.ElasticsearchTemplate">
         <constructor-arg name="client" ref="client"/>

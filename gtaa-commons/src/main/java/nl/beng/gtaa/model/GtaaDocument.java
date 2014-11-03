@@ -3,22 +3,34 @@ package nl.beng.gtaa.model;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-@Document(type="GtaaDocument", indexName = "gtaa")
+@Document(type = "GtaaDocument", indexName = "gtaa")
 public class GtaaDocument {
 
-	@JsonProperty
-	private String prefLabel;
 	@JsonProperty
 	@Id
 	private String id;
 	@JsonProperty
+	@JsonInclude(value = Include.NON_NULL)
+	private String prefLabel;
+	@JsonProperty
+	@JsonInclude(value = Include.NON_NULL)
 	private String altLabel;
 	@JsonProperty
+	@JsonInclude(value = Include.NON_NULL)
 	private String conceptScheme;
 	@JsonProperty
+	@JsonInclude(value = Include.NON_NULL)
 	private String uri;
+	@JsonProperty
+	@JsonInclude(value = Include.NON_NULL)
+	private GtaaType type;
+	@JsonProperty
+	@JsonInclude(value = Include.NON_NULL)
+	private GtaaType score;
 
 	public String getPrefLabel() {
 		return prefLabel;
@@ -60,11 +72,44 @@ public class GtaaDocument {
 		this.id = id;
 	}
 
+	public GtaaType getType() {
+		return type;
+	}
+
+	public void setType(GtaaType type) {
+		this.type = type;
+	}
+
 	@Override
 	public String toString() {
-		return "GtaaDocument [prefLabel=" + prefLabel + ", id=" + id
+		return "GtaaDocument [id=" + id + ", prefLabel=" + prefLabel
 				+ ", altLabel=" + altLabel + ", conceptScheme=" + conceptScheme
-				+ ", uri=" + uri + "]";
+				+ ", uri=" + uri + ", type=" + type + "]";
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((id == null) ? 0 : id.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		GtaaDocument other = (GtaaDocument) obj;
+		if (id == null) {
+			if (other.id != null)
+				return false;
+		} else if (!id.equals(other.id))
+			return false;
+		return true;
 	}
 
 }
