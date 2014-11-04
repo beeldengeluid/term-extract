@@ -21,10 +21,13 @@ import org.springframework.stereotype.Component;
 @Component
 public class GtaaElasticsearchRepository implements GtaaRepository {
 
+	private static final String ALT_LABEL_FIELDNAME = "altLabel";
+
+	private static final String PREF_LABEL_FIELDNAME = "prefLabel";
+
 	@Autowired
 	private ElasticsearchTemplate template;
-	
-	
+
 	@Value("${nl.beng.termextract.algorithm.gtaa.match.min.score}")
 	private float minScore;
 
@@ -42,8 +45,12 @@ public class GtaaElasticsearchRepository implements GtaaRepository {
 		orFilter = FilterBuilders.orFilter(filters
 				.toArray(new FilterBuilder[] {}));
 		boolFilter.must(orFilter);
-		query = new NativeSearchQueryBuilder().withQuery(QueryBuilders
-				.filteredQuery(QueryBuilders.queryString(token), boolFilter)).withMinScore(minScore);
+		query = new NativeSearchQueryBuilder().withQuery(
+				QueryBuilders.filteredQuery(
+						QueryBuilders.queryString(token)
+								.field(PREF_LABEL_FIELDNAME, 10)
+								.field(ALT_LABEL_FIELDNAME, 2), boolFilter))
+				.withMinScore(minScore);
 		return template.queryForList(query.build(), GtaaDocument.class);
 	}
 }

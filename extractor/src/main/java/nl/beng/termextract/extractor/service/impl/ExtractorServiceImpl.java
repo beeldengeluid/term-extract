@@ -1,10 +1,14 @@
 package nl.beng.termextract.extractor.service.impl;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import nl.beng.gtaa.model.GtaaDocument;
@@ -15,16 +19,19 @@ import nl.beng.termextract.extractor.repository.namedentity.NamedEntityExtractio
 import nl.beng.termextract.extractor.repository.namedentity.NamedEntityRecognitionRepository;
 import nl.beng.termextract.extractor.service.ExtractionException;
 import nl.beng.termextract.extractor.service.ExtractorService;
+import nl.beng.termextract.extractor.service.Match;
 import nl.beng.termextract.extractor.service.Settings;
-import nl.beng.termextract.extractor.service.Term;
+import nl.beng.termextract.extractor.service.impl.algorithm.AbstractAnalyzer;
 import nl.beng.termextract.extractor.service.impl.algorithm.NGramAnalyzer;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.lucene.analysis.util.CharArraySet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.google.common.collect.HashMultiset;
@@ -42,93 +49,159 @@ public class ExtractorServiceImpl implements ExtractorService {
 	@Autowired
 	private NamedEntityRecognitionRepository namedEntityRecognitionRepository;
 
-	@Override
-	public List<Set<Term>> extract(List<String> texts, Settings settings)
-			throws ExtractionException {
-		List<Set<Term>> extractedTermsList = new LinkedList<>();
-		for (String text : texts) {
-			Set<Term> terms = extractTerms(text, settings);
+	@Autowired
+	private Settings defaultSettings;
 
-			extractedTermsList.add(terms);
+	private Map<String, Integer> wordFrequencyMap;
+	private CharArraySet stopwordsSet;
+
+	@Value("${nl.beng.termextract.algorithm.wordfrequency.file}")
+	public void setWordFrequencyMap(final String wordFrequencyFileName)
+			throws NumberFormatException, IOException {
+		wordFrequencyMap = new HashMap<>();
+		BufferedReader reader = null;
+		try {
+			reader = new BufferedReader(new FileReader(wordFrequencyFileName));
+			String line = null;
+			while ((line = reader.readLine()) != null) {
+				String[] words = line.split(";");
+				wordFrequencyMap.put(words[0], Integer.parseInt(words[1]));
+			}
+		} finally {
+			if (reader != null) {
+				reader.close();
+			}
 		}
-		return extractedTermsList;
+
 	}
 
-	private Set<Term> extractTerms(String text, Settings settings)
+	@Value("${nl.beng.termextract.algorithm.stopwords}")
+	public void setStopwords(final String stopwords) throws IOException {
+		this.stopwordsSet = new CharArraySet(AbstractAnalyzer.LUCENE_VERSION,
+				Arrays.asList(stopwords.split(",")), false);
+	}
+
+	@Override
+	public Set<Match> extract(String text) throws ExtractionException {
+		return doExtract(text, defaultSettings);
+	}
+
+	@Override
+	public Set<Match> extract(String text, Settings settings)
 			throws ExtractionException {
-		Set<Term> terms = new HashSet<>();
+		if (settings != null) {
+			if (settings.getMinGram() == null) {
+				settings.setMinGram(defaultSettings.getMinGram());
+			}
+			if (settings.getMaxGram() == null) {
+				settings.setMaxGram(defaultSettings.getMaxGram());
+			}
+			if (settings.getMinTokenFrequency() == null) {
+				settings.setMinTokenFrequency(defaultSettings
+						.getMinTokenFrequency());
+			}
+			if (settings.getMinNormalizedFrequency() == null) {
+				settings.setMinNormalizedFrequency(defaultSettings
+						.getMinNormalizedFrequency());
+			}
+			return doExtract(text, settings);
+		} else {
+			return doExtract(text, defaultSettings);
+		}
+	}
+
+	private Set<Match> doExtract(String text, Settings settings)
+			throws ExtractionException {
+		Set<Match> matches = new HashSet<>();
+		Multiset<GtaaDocument> gtaaMatches = HashMultiset.create();
 		Multiset<String> tokens = null;
 		List<NamedEntity> namedEntities = null;
-		tokens = extractTokens(text, new NGramAnalyzer(settings));
-		tokens = extractFrequentTokens(tokens, settings);
-		tokens = extractUncommonTokens(tokens, settings);
-		terms.addAll(findMatchingTerms(tokens));
 		try {
+			tokens = extractTokens(text, new NGramAnalyzer(this.stopwordsSet,
+					settings));
+			tokens = extractFrequentTokens(tokens, settings);
+			tokens = extractUncommonTokens(tokens, settings);
+			gtaaMatches.addAll(findGtaaMatches(tokens));
 			namedEntities = namedEntityRecognitionRepository.extract(text);
+			gtaaMatches.addAll(findMatchingTerms(namedEntities, settings));
+			for (Entry<GtaaDocument> gtaaMatch : gtaaMatches.entrySet()) {
+				matches.add(createMatch(gtaaMatch.getElement()));
+			}
 		} catch (NamedEntityExtractionException e) {
 			String message = "Could not extract entities from named entity recognition repository.";
 			logger.error(message, e);
 			throw new ExtractionException(message, e);
+
 		}
-		terms.addAll(findMatchingTerms(namedEntities));
-		return terms;
+		return matches;
 	}
 
-	private Set<Term> findMatchingTerms(List<NamedEntity> namedEntities) {
+	private Match createMatch(GtaaDocument document) {
+		Match match = new Match();
+		match.setType(document.getType().toValue());
+		match.setUri(document.getUri());
+		match.setPrefLabel(document.getPrefLabel());
+		match.setAltLabel(document.getAltLabel());
+		if (document.getConceptScheme() != null) {
+			match.setConceptSchemes(document.getConceptScheme().split(" "));
+		}
+		return match;
+	}
+
+	private Multiset<GtaaDocument> findMatchingTerms(
+			List<NamedEntity> namedEntities, Settings settings) {
 		logger.info("Start findMatchingTerms(namedEntities)");
-		Set<Term> terms = new HashSet<>();
-		Multiset<GtaaDocument> gtaaDocuments = HashMultiset.create();
+		Multiset<GtaaDocument> frequentGtaaMatches = HashMultiset.create();
+		Multiset<GtaaDocument> gtaaMatches = HashMultiset.create();
 		for (NamedEntity namedEntity : namedEntities) {
 			switch (namedEntity.getType()) {
 			case PERSON:
-				gtaaDocuments.addAll(gtaaRepository.find(namedEntity.getText(),
+				gtaaMatches.addAll(gtaaRepository.find(namedEntity.getText(),
 						GtaaType.PERSOONSNAMEN));
 				break;
 			case LOCATION:
-				gtaaDocuments.addAll(gtaaRepository.find(namedEntity.getText(),
+				gtaaMatches.addAll(gtaaRepository.find(namedEntity.getText(),
 						GtaaType.GEOGRAFISCHENAMEN));
 				break;
 			case ORGANIZATION:
-				gtaaDocuments.addAll(gtaaRepository.find(namedEntity.getText(),
+				gtaaMatches.addAll(gtaaRepository.find(namedEntity.getText(),
 						GtaaType.NAMEN));
 				break;
 			case MISC:
-				gtaaDocuments.addAll(gtaaRepository.find(namedEntity.getText(),
+				gtaaMatches.addAll(gtaaRepository.find(namedEntity.getText(),
 						GtaaType.PERSOONSNAMEN, GtaaType.ONDERWERPEN));
 				break;
 			default:
 				;
 			}
-			for (GtaaDocument gtaaDocument : gtaaDocuments.elementSet()) {
-				Term term = new Term();
-//				term.setFrequency(gtaaDocuments.count(gtaaDocument));
-				term.addGtaaMatch(gtaaDocument);
-				terms.add(term);
-			}
 		}
-		logger.info(terms.size() + " terms extracted");
+		frequentGtaaMatches = extractFrequentMatches(gtaaMatches, settings);
+		logger.info(frequentGtaaMatches.entrySet().size() + " matches found");
 		logger.info("End findMatchingTerms(namedEntities)");
-		return terms;
+		return frequentGtaaMatches;
 	}
 
-	private Set<Term> findMatchingTerms(Multiset<String> tokens) {
-		logger.info("Start findMatchingTerms(tokens)");
-		Set<Term> terms = new HashSet<>();
-		for (Entry<String> token : tokens.entrySet()) {
-			List<GtaaDocument> gtaaDocuments = gtaaRepository.find(
-					token.getElement(), GtaaType.ONDERWERPEN);
-			if (gtaaDocuments.size() > 0) {
-				logger.debug("found GTAADocument for term '"
-						+ token.getElement() + "' " + gtaaDocuments);
-				Term term = new Term();
-///				term.setFrequency(token.getCount());
-				term.setGtaaMatches(new HashSet<>(gtaaDocuments));
-				terms.add(term);
+	private Multiset<GtaaDocument> extractFrequentMatches(
+			Multiset<GtaaDocument> gtaaMatches, Settings settings) {
+		Multiset<GtaaDocument> frequentGtaaMatches = HashMultiset.create();
+		for (Entry<GtaaDocument> match : gtaaMatches.entrySet()) {
+			if (match.getCount() >= settings.getMinTokenFrequency()) {
+				frequentGtaaMatches.add(match.getElement(), match.getCount());
 			}
 		}
-		logger.info(terms.size() + " tokens matched");
+		return frequentGtaaMatches;
+	}
+
+	private Multiset<GtaaDocument> findGtaaMatches(Multiset<String> tokens) {
+		logger.info("Start findMatchingTerms(tokens)");
+		Multiset<GtaaDocument> gtaaMatches = HashMultiset.create();
+		for (Entry<String> token : tokens.entrySet()) {
+			gtaaMatches.addAll(gtaaRepository.find(token.getElement(),
+					GtaaType.ONDERWERPEN));
+		}
+		logger.info(gtaaMatches.size() + " gtaa matches");
 		logger.info("End findMatchingTerms(tokens)");
-		return terms;
+		return gtaaMatches;
 	}
 
 	private Multiset<String> extractUncommonTokens(Multiset<String> tokens,
@@ -136,8 +209,8 @@ public class ExtractorServiceImpl implements ExtractorService {
 		logger.info("Start extractUncommonTokens()");
 		Multiset<String> uncommonTokens = HashMultiset.create();
 		for (Entry<String> token : tokens.entrySet()) {
-			Integer wordFrequency = settings.getWordFrequencyMap().get(
-					token.getElement());
+			Integer wordFrequency = this.wordFrequencyMap.get(token
+					.getElement());
 			wordFrequency = wordFrequency == null ? 1 : wordFrequency;
 			double normfrequency = token.getCount() / wordFrequency;
 			if (normfrequency < settings.getMinNormalizedFrequency()) {

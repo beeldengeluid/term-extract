@@ -1,14 +1,12 @@
 package nl.beng.termextract.extractor.rest.controller;
 
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
 
 import nl.beng.termextract.extractor.rest.model.ExtractRequest;
 import nl.beng.termextract.extractor.service.ExtractionException;
 import nl.beng.termextract.extractor.service.ExtractorService;
+import nl.beng.termextract.extractor.service.Match;
 import nl.beng.termextract.extractor.service.Settings;
-import nl.beng.termextract.extractor.service.Term;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,45 +31,39 @@ public class TermExtractController {
 
 	@Autowired
 	private ExtractorService extractorService;
-	@Autowired
-	private Settings defaultSettings;
 
 	@RequestMapping(method = { RequestMethod.GET }, produces = REST_RESPONSE_TYPE)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
-	public List<Set<Term>> extract(@RequestParam(value = "text") String text)
+	public Set<Match> extract(@RequestParam(value = "text") String text)
 			throws ExtractionException {
-		return extractTerms(text, defaultSettings);
+		logger.debug("GET Start term extraction....");
+		try {
+			return extractorService.extract(text);
+		} finally {
+			logger.debug("GET End term extraction.");
+		}
 	}
 
 	@RequestMapping(method = { RequestMethod.POST }, headers = REST_REQUEST_TYPE, produces = REST_RESPONSE_TYPE)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
-	public List<Set<Term>> extractPost(@RequestBody final ExtractRequest request)
-			throws ExtractionException {
-		if (request.getSettings().getMinGram() != null) {
-			defaultSettings.setMinGram(request.getSettings().getMinGram());
-		}
-		if (request.getSettings().getMaxGram() != null) {
-			defaultSettings.setMaxGram(request.getSettings().getMaxGram());
-		}
-		if (request.getSettings().getMinTokenFrequency() != null) {
-			defaultSettings.setMinTokenFrequency(request.getSettings()
-					.getMinTokenFrequency());
-		}
-		if (request.getSettings().getMinNormalizedFrequency() != null) {
-			defaultSettings.setMinNormalizedFrequency(request.getSettings().getMinNormalizedFrequency());
-		}
-		return extractTerms(request.getText(), defaultSettings);
-	}
-
-	private List<Set<Term>> extractTerms(String text, Settings settings)
+	public Set<Match> extractPost(@RequestBody final ExtractRequest request)
 			throws ExtractionException {
 		logger.debug("Start term extraction....");
-		List<String> texts = new LinkedList<>();
-		texts.add(text);
 		try {
-			return extractorService.extract(texts, settings);
+			if (request.getSettings() != null) {
+				Settings settings = new Settings();
+				settings.setMinGram(request.getSettings().getMinGram());
+				settings.setMaxGram(request.getSettings().getMaxGram());
+				settings.setMinTokenFrequency(request.getSettings()
+						.getMinTokenFrequency());
+				settings.setMinNormalizedFrequency(request.getSettings()
+						.getMinNormalizedFrequency());
+				return extractorService.extract(request.getText(), settings);
+			} else {
+				return extractorService.extract(request.getText());
+			}
 		} finally {
 			logger.debug("End term extraction.");
 		}

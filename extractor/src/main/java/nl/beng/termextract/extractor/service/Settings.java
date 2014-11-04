@@ -1,15 +1,5 @@
 package nl.beng.termextract.extractor.service;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-
-import nl.beng.termextract.extractor.service.impl.algorithm.AbstractAnalyzer;
-
-import org.apache.lucene.analysis.util.CharArraySet;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -17,81 +7,43 @@ import org.springframework.stereotype.Component;
 public class Settings {
 
 	@Value("${nl.beng.termextract.algorithm.min.gram}")
-	private int minGram;
+	private Integer minGram;
 	@Value("${nl.beng.termextract.algorithm.max.gram}")
-	private int maxGram;
+	private Integer maxGram;
 	@Value("${nl.beng.termextract.algorithm.min.token.frequency}")
-	private int minTokenFrequency;
+	private Integer minTokenFrequency;
 	@Value("${nl.beng.termextract.algorithm.norm.frequency}")
-	private double minNormalizedFrequency;
+	private Double minNormalizedFrequency;
 
-	private Map<String, Integer> wordFrequencyMap;
-	private CharArraySet stopwordsSet;
-
-	@Value("${nl.beng.termextract.algorithm.wordfrequency.file}")
-	public void setWordFrequencyMap(final String wordFrequencyFileName)
-			throws NumberFormatException, IOException {
-		wordFrequencyMap = new HashMap<>();
-		BufferedReader reader = null;
-		try {
-			reader = new BufferedReader(new FileReader(wordFrequencyFileName));
-			String line = null;
-			while ((line = reader.readLine()) != null) {
-				String[] words = line.split(";");
-				wordFrequencyMap.put(words[0], Integer.parseInt(words[1]));
-			}
-		} finally {
-			if (reader != null) {
-				reader.close();
-			}
-		}
-
-	}
-
-	@Value("${nl.beng.termextract.algorithm.stopwords}")
-	public void setStopwords(final String stopwords) throws IOException {
-		this.stopwordsSet = new CharArraySet(AbstractAnalyzer.LUCENE_VERSION,
-				Arrays.asList(stopwords.split(",")), false);
-	}
-
-	public int getMinGram() {
+	public Integer getMinGram() {
 		return minGram;
 	}
 
-	public void setMinGram(int minGram) {
+	public void setMinGram(Integer minGram) {
 		this.minGram = minGram;
 	}
 
-	public int getMaxGram() {
+	public Integer getMaxGram() {
 		return maxGram;
 	}
 
-	public void setMaxGram(int maxGram) {
+	public void setMaxGram(Integer maxGram) {
 		this.maxGram = maxGram;
 	}
 
-	public CharArraySet getStopwordsSet() {
-		return stopwordsSet;
-	}
-
-	public int getMinTokenFrequency() {
+	public Integer getMinTokenFrequency() {
 		return minTokenFrequency;
 	}
 
-	public void setMinTokenFrequency(int minTokenFrequency) {
+	public void setMinTokenFrequency(Integer minTokenFrequency) {
 		this.minTokenFrequency = minTokenFrequency;
 	}
 
-	public double getMinNormalizedFrequency() {
+	public Double getMinNormalizedFrequency() {
 		return minNormalizedFrequency;
 	}
 
-	public void setMinNormalizedFrequency(double minNormalizedFrequency) {
+	public void setMinNormalizedFrequency(Double minNormalizedFrequency) {
 		this.minNormalizedFrequency = minNormalizedFrequency;
 	}
-
-	public Map<String, Integer> getWordFrequencyMap() {
-		return wordFrequencyMap;
-	}
-
 }

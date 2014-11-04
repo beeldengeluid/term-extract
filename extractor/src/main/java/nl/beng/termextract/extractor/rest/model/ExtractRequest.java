@@ -1,7 +1,11 @@
 package nl.beng.termextract.extractor.rest.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
 public class ExtractRequest {
 
+	@JsonInclude(value = Include.NON_NULL)
 	private Settings settings;
 	private String text;
 

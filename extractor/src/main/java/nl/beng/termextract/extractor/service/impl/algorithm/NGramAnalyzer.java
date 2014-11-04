@@ -10,12 +10,15 @@ import org.apache.lucene.analysis.core.LowerCaseFilter;
 import org.apache.lucene.analysis.core.StopFilter;
 import org.apache.lucene.analysis.shingle.ShingleFilter;
 import org.apache.lucene.analysis.standard.StandardTokenizer;
+import org.apache.lucene.analysis.util.CharArraySet;
 
 public class NGramAnalyzer extends AbstractAnalyzer {
 
 	private Settings settings;
+	private CharArraySet stopwordsSet;
 
-	public NGramAnalyzer(Settings settings) {
+	public NGramAnalyzer(CharArraySet stopwordsSet, Settings settings) {
+		this.stopwordsSet = stopwordsSet;
 		this.settings = settings;
 	}
 
@@ -31,7 +34,7 @@ public class NGramAnalyzer extends AbstractAnalyzer {
 				this.settings.getMinGram(), this.settings.getMaxGram());
 		TokenStream filter = new LowerCaseFilter(LUCENE_VERSION, shingleFilter);
 		filter = new StopFilter(LUCENE_VERSION, filter,
-				this.settings.getStopwordsSet());
+				this.stopwordsSet);
 		return new TokenStreamComponents(source, filter);
 	}
 

@@ -28,9 +28,13 @@ public class GtaaDocument {
 	@JsonProperty
 	@JsonInclude(value = Include.NON_NULL)
 	private GtaaType type;
-	@JsonProperty
-	@JsonInclude(value = Include.NON_NULL)
-	private GtaaType score;
+
+	public GtaaDocument() {
+	}
+
+	public GtaaDocument(String id) {
+		this.id = id;
+	}
 
 	public String getPrefLabel() {
 		return prefLabel;
@@ -81,13 +85,6 @@ public class GtaaDocument {
 	}
 
 	@Override
-	public String toString() {
-		return "GtaaDocument [id=" + id + ", prefLabel=" + prefLabel
-				+ ", altLabel=" + altLabel + ", conceptScheme=" + conceptScheme
-				+ ", uri=" + uri + ", type=" + type + "]";
-	}
-
-	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
@@ -110,6 +107,13 @@ public class GtaaDocument {
 		} else if (!id.equals(other.id))
 			return false;
 		return true;
+	}
+
+	@Override
+	public String toString() {
+		return "GtaaDocument [id=" + id + ", prefLabel=" + prefLabel
+				+ ", altLabel=" + altLabel + ", conceptScheme=" + conceptScheme
+				+ ", uri=" + uri + ", type=" + type + "]";
 	}
 
 }
