@@ -1,25 +1,18 @@
 package nl.beng.termextract.extractor.service;
 
 import java.io.IOException;
-import java.util.List;
 
 import nl.beng.gtaa.model.GtaaDocument;
-import nl.beng.termextract.extractor.service.model.ExtractResponse;
-import nl.beng.termextract.extractor.service.model.Match;
 
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+/*@RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = { "classpath:extractor-test-application.xml" })
-public class ExtractorServiceTest {
+*/public class ExtractorServiceTest {
 
 	@Autowired
 	ElasticsearchTemplate elasticsearchTemplate;
