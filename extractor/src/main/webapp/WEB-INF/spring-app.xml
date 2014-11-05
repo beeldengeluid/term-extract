@@ -22,7 +22,6 @@
 		</property>
 	</bean>
 
-
 	<context:component-scan base-package="nl.beng.termextract.extractor.repository" />
 
 	<elasticsearch:repositories base-package="nl.beng.termextract.extractor.repository" />

@@ -1,6 +1,7 @@
 package nl.beng.termextract.extractor.service;
 
-import java.util.Set;
+import nl.beng.termextract.extractor.service.model.ExtractResponse;
+import nl.beng.termextract.extractor.service.model.Settings;
 
 public interface ExtractorService {
 
@@ -12,7 +13,7 @@ public interface ExtractorService {
 	 * @return
 	 * @throws ExtractionException
 	 */
-	Set<Match> extract(String text, Settings settings)
+	ExtractResponse extract(String text, Settings settings)
 			throws ExtractionException;
 
 	/**
@@ -22,6 +23,6 @@ public interface ExtractorService {
 	 * @return
 	 * @throws ExtractionException
 	 */
-	Set<Match> extract(String text) throws ExtractionException;
+	ExtractResponse extract(String text) throws ExtractionException;
 
 }

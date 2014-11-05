@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans	http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+                http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+
+ 	<bean id="extractSettings" class="nl.beng.termextract.extractor.service.model.Settings">
+		<constructor-arg>
+			<props>
+				<prop key="tokenizer.min.gram">${nl.beng.termextract.tokenizer.min.gram}</prop>
+				<prop key="tokenizer.max.gram">${nl.beng.termextract.tokenizer.max.gram}</prop>
+				<prop key="tokenizer.min.norm.frequency">${nl.beng.termextract.tokenizer.min.norm.frequency}</prop>
+				<prop key="tokenizer.min.token.frequency">${nl.beng.termextract.tokenizer.min.token.frequency}</prop>
+				<prop key="tokenizer.min.score">${nl.beng.termextract.tokenizer.min.score}</prop>
+				<prop key="namedentity.person.min.token.frequency">${nl.beng.termextract.namedentity.person.min.token.frequency}</prop>
+				<prop key="namedentity.organization.min.token.frequency">${nl.beng.termextract.namedentity.organization.min.token.frequency}</prop>
+				<prop key="namedentity.location.min.token.frequency">${nl.beng.termextract.namedentity.location.min.token.frequency}</prop>
+				<prop key="namedentity.misc.min.token.frequency">${nl.beng.termextract.namedentity.misc.min.token.frequency}</prop>
+				<prop key="namedentity.person.min.score">${nl.beng.termextract.namedentity.person.min.score}</prop>
+				<prop key="namedentity.organization.min.score">${nl.beng.termextract.namedentity.organization.min.score}</prop>
+				<prop key="namedentity.location.min.score">${nl.beng.termextract.namedentity.location.min.score}</prop>
+				<prop key="namedentity.misc.min.score">${nl.beng.termextract.namedentity.misc.min.score}</prop>
+			</props>
+		</constructor-arg>
+	</bean>
+
+</beans>

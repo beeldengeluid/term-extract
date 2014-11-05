@@ -2,7 +2,7 @@ package nl.beng.termextract.extractor.service.impl.algorithm;
 
 import java.io.Reader;
 
-import nl.beng.termextract.extractor.service.Settings;
+import nl.beng.termextract.extractor.service.model.Settings;
 
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Tokenizer;
@@ -30,11 +30,10 @@ public class NGramAnalyzer extends AbstractAnalyzer {
 	@Override
 	protected TokenStreamComponents createComponents(String f, Reader reader) {
 		Tokenizer source = new StandardTokenizer(LUCENE_VERSION, reader);
-		ShingleFilter shingleFilter = new ShingleFilter(source,
-				this.settings.getMinGram(), this.settings.getMaxGram());
+		ShingleFilter shingleFilter = new ShingleFilter(source, this.settings
+				.getTokenizerMinGram(), this.settings.getTokenizerMaxGram());
 		TokenStream filter = new LowerCaseFilter(LUCENE_VERSION, shingleFilter);
-		filter = new StopFilter(LUCENE_VERSION, filter,
-				this.stopwordsSet);
+		filter = new StopFilter(LUCENE_VERSION, filter, this.stopwordsSet);
 		return new TokenStreamComponents(source, filter);
 	}
 

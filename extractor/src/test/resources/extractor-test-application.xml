@@ -8,29 +8,32 @@
                 http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
                 http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.1.xsd">
 
-    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
-        <property name="ignoreResourceNotFound" value="true"/>
-        <property name="searchSystemEnvironment" value="true"/>
-        <property name="systemPropertiesMode" value="2"/>
-        <property name="placeholderPrefix" value="${"/>
-        <property name="locations">
-            <list>
-                <value>classpath:/extractor.properties</value>
-                <value>file:${user.home}/appdata/extractor/config/extractor.properties</value>
-                <value>file:${config.dir}/extractor.properties</value>
-            </list>
-        </property>
-    </bean>
+	<bean
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="ignoreResourceNotFound" value="true" />
+		<property name="searchSystemEnvironment" value="true" />
+		<property name="systemPropertiesMode" value="2" />
+		<property name="placeholderPrefix" value="${" />
+		<property name="locations">
+			<list>
+				<value>classpath:/extractor.properties</value>
+				<value>file:${user.home}/appdata/extractor/config/extractor.properties
+				</value>
+				<value>file:${config.dir}/extractor.properties</value>
+			</list>
+		</property>
+	</bean>
 
+    <import resource="classpath:/service-settings.xml"/>
 
 	<context:component-scan base-package="nl.beng.termextract.extractor.repository" />
 	<context:component-scan base-package="nl.beng.termextract.extractor.service" />
 
 	<elasticsearch:repositories base-package="nl.beng.termextract.extractor.repository" />
 
-<!-- 	<elasticsearch:node-client id="client" local="true" />
- -->    
-	<elasticsearch:transport-client id="client" cluster-nodes="${nl.beng.gtaa.elasticsearch.nodes}" cluster-name="${nl.beng.gtaa.elasticsearch.clustername}" />
+	<!-- <elasticsearch:node-client id="client" local="true" /> -->
+	<elasticsearch:transport-client id="client"
+		cluster-nodes="${nl.beng.gtaa.elasticsearch.nodes}" cluster-name="${nl.beng.gtaa.elasticsearch.clustername}" />
 
 	<bean name="elasticsearchTemplate"
 		class="org.springframework.data.elasticsearch.core.ElasticsearchTemplate">

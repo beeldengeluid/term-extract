@@ -22,6 +22,8 @@
         </property>
     </bean>
 
+    <import resource="classpath:/service-settings.xml"/>
+
     <context:component-scan base-package="nl.beng.termextract.extractor.rest"/>
 	<context:component-scan base-package="nl.beng.termextract.extractor.service" />
     <mvc:annotation-driven/>

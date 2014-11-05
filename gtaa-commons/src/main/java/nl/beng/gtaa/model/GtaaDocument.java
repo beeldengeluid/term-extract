@@ -28,6 +28,9 @@ public class GtaaDocument {
 	@JsonProperty
 	@JsonInclude(value = Include.NON_NULL)
 	private GtaaType type;
+	@JsonProperty
+	@JsonInclude(value = Include.NON_NULL)
+	private Float score;
 
 	public GtaaDocument() {
 	}
@@ -84,6 +87,14 @@ public class GtaaDocument {
 		this.type = type;
 	}
 
+	public Float getScore() {
+		return score;
+	}
+
+	public void setScore(Float score) {
+		this.score = score;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -111,9 +122,9 @@ public class GtaaDocument {
 
 	@Override
 	public String toString() {
-		return "GtaaDocument [id=" + id + ", prefLabel=" + prefLabel
-				+ ", altLabel=" + altLabel + ", conceptScheme=" + conceptScheme
-				+ ", uri=" + uri + ", type=" + type + "]";
+		return "GtaaDocument [id=" + id + ", score=" + score + ", prefLabel="
+				+ prefLabel + ", altLabel=" + altLabel + ", conceptScheme="
+				+ conceptScheme + ", uri=" + uri + ", type=" + type + "]";
 	}
 
 }

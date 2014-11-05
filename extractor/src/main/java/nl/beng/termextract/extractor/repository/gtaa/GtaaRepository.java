@@ -7,6 +7,6 @@ import nl.beng.gtaa.model.GtaaType;
 
 public interface GtaaRepository {
 
-	List<GtaaDocument> find(final String token, GtaaType...types);
+	List<GtaaDocument> find(final String token, Float minScore, GtaaType...types);
 
 }

@@ -1,12 +1,10 @@
 package nl.beng.termextract.extractor.rest.controller;
 
-import java.util.Set;
-
 import nl.beng.termextract.extractor.rest.model.ExtractRequest;
 import nl.beng.termextract.extractor.service.ExtractionException;
 import nl.beng.termextract.extractor.service.ExtractorService;
-import nl.beng.termextract.extractor.service.Match;
-import nl.beng.termextract.extractor.service.Settings;
+import nl.beng.termextract.extractor.service.model.ExtractResponse;
+import nl.beng.termextract.extractor.service.model.Settings;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +33,7 @@ public class TermExtractController {
 	@RequestMapping(method = { RequestMethod.GET }, produces = REST_RESPONSE_TYPE)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
-	public Set<Match> extract(@RequestParam(value = "text") String text)
+	public ExtractResponse extract(@RequestParam(value = "text") String text)
 			throws ExtractionException {
 		logger.debug("GET Start term extraction....");
 		try {
@@ -48,18 +46,13 @@ public class TermExtractController {
 	@RequestMapping(method = { RequestMethod.POST }, headers = REST_REQUEST_TYPE, produces = REST_RESPONSE_TYPE)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
-	public Set<Match> extractPost(@RequestBody final ExtractRequest request)
+	public ExtractResponse extractPost(@RequestBody final ExtractRequest request)
 			throws ExtractionException {
 		logger.debug("Start term extraction....");
 		try {
 			if (request.getSettings() != null) {
 				Settings settings = new Settings();
-				settings.setMinGram(request.getSettings().getMinGram());
-				settings.setMaxGram(request.getSettings().getMaxGram());
-				settings.setMinTokenFrequency(request.getSettings()
-						.getMinTokenFrequency());
-				settings.setMinNormalizedFrequency(request.getSettings()
-						.getMinNormalizedFrequency());
+				settings.setProperties(request.getSettings());
 				return extractorService.extract(request.getText(), settings);
 			} else {
 				return extractorService.extract(request.getText());

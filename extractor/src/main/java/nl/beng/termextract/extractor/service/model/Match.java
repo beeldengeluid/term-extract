@@ -1,6 +1,4 @@
-package nl.beng.termextract.extractor.service;
-
-import java.util.Set;
+package nl.beng.termextract.extractor.service.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -19,6 +17,9 @@ public class Match {
 	@JsonProperty(value = "concept_schemes")
 	@JsonInclude(value = Include.NON_NULL)
 	private String[] conceptSchemes;
+	@JsonProperty
+	@JsonInclude(value = Include.NON_NULL)
+	private Float score;
 
 	public String getUri() {
 		return uri;
@@ -60,10 +61,18 @@ public class Match {
 		this.conceptSchemes = conceptSchemes;
 	}
 
+	public Float getScore() {
+		return score;
+	}
+
+	public void setScore(Float score) {
+		this.score = score;
+	}
+
 	@Override
 	public String toString() {
-		return "Match [uri=" + uri + ", prefLabel=" + prefLabel + ", altLabel="
-				+ altLabel + ", type=" + type + ", conceptSchemes="
-				+ conceptSchemes + "]";
+		return "Match [uri=" + uri + ", score=" + score + ", prefLabel="
+				+ prefLabel + ", altLabel=" + altLabel + ", type=" + type
+				+ ", conceptSchemes=" + conceptSchemes + "]";
 	}
 }
