@@ -1,14 +1,13 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>nl.beng.termextract</groupId>
 		<artifactId>term-extract</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
+		<version>0.0.1</version>
 	</parent>
 	<groupId>nl.beng.termextract.extractor</groupId>
 	<artifactId>extractor</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1</version>
 	<packaging>war</packaging>
 	<name>Term extract extractor</name>
 	<description>Extractor Gemeenschappelijke Thesaurus Audiovisuele Archieven and other sources</description>
@@ -16,7 +15,7 @@
 		<dependency>
 			<groupId>nl.beng.gtaa.commons</groupId>
 			<artifactId>gtaa-commons</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>0.0.1</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
