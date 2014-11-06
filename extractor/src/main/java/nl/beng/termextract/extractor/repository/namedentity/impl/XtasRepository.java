@@ -19,7 +19,6 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -95,14 +94,13 @@ public class XtasRepository implements NamedEntityRecognitionRepository {
 		List<NamedEntity> namedEntities = new LinkedList<>();
 		String[] tokenArray = tokens.split("_");
 		String[] tokenEncodingArray = tokenEncoding.split("_");
+		int index = 0;
+		NamedEntity namedEntity = null;
 		if (tokenArray.length != tokenEncodingArray.length) {
 			logger.warn("Tokens '" + tokens + "' do not match token '"
 					+ tokenEncoding + "' encoding.");
 			return null;
 		}
-
-		int index = 0;
-		NamedEntity namedEntity = null;
 		for (String token : tokenArray) {
 			String encoding = tokenEncodingArray[index];
 			if (encoding.indexOf("-") == 1) {
@@ -111,6 +109,7 @@ public class XtasRepository implements NamedEntityRecognitionRepository {
 				if (!StringUtils.isBlank(type)) {
 					if (tag.equals("B")) {
 						if (namedEntity != null) {
+							logger.debug("Named entity extracted '" + namedEntity + "'" );
 							// we already have a named entity
 							namedEntities.add(namedEntity);
 						}
@@ -131,8 +130,8 @@ public class XtasRepository implements NamedEntityRecognitionRepository {
 			index++;
 		}
 		if (namedEntity != null) {
+			logger.debug("Named entity extracted '" + namedEntity + "'" );
 			namedEntities.add(namedEntity);
-
 		}
 		return namedEntities;
 	}
@@ -168,15 +167,10 @@ public class XtasRepository implements NamedEntityRecognitionRepository {
 			connection.setRequestProperty("Content-Type", "application/json");
 			connection.setRequestProperty("Content-Length",
 					String.valueOf(postData.length()));
-
-			// Write data
 			outputStream = connection.getOutputStream();
 			outputStream.write(postData.getBytes());
-
-			// Read response
 			reader = new BufferedReader(new InputStreamReader(
 					connection.getInputStream()));
-
 			String line = null;
 			while ((line = reader.readLine()) != null)
 				response.append(line);
@@ -210,7 +204,6 @@ public class XtasRepository implements NamedEntityRecognitionRepository {
 			connection.setDoOutput(true);
 			connection.setRequestMethod("GET");
 			connection.setRequestProperty("Content-Type", "application/json");
-			// Read response
 			reader = new BufferedReader(new InputStreamReader(
 					connection.getInputStream()));
 			String line = null;

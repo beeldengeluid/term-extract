@@ -276,9 +276,6 @@ public class ExtractorServiceImpl implements ExtractorService {
 					.getElement());
 			wordFrequency = wordFrequency == null ? 1 : wordFrequency;
             
-//			if (termList.get(i).normfrequency >= threshold){
-
-			
 			double normfrequency = token.getCount() / wordFrequency;
 			if (normfrequency >= settings.getTokenizerMinNormFrequency()) {
 				logger.debug("Uncommon token found: '" + token.getElement()

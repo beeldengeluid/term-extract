@@ -80,6 +80,7 @@ public class CltlRepository implements NamedEntityRecognitionRepository {
 							break;
 						}
 					}
+					logger.debug("Named entity extracted '" + namedEntity + "'" );
 					namedEntities.add(namedEntity);
 				}
 			} catch (DocumentException e) {
