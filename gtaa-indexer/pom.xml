@@ -3,18 +3,18 @@
 	<parent>
 		<groupId>nl.beng.termextract</groupId>
 		<artifactId>term-extract</artifactId>
-		<version>0.0.1</version>
+		<version>0.0.2-SNAPSHOT</version>
 	</parent>
 	<groupId>nl.beng.gtaa.indexer</groupId>
 	<artifactId>gtaa-indexer</artifactId>
-	<version>0.0.1</version>
+	<version>0.0.2-SNAPSHOT</version>
 	<name>Indexer Gemeenschappelijke Thesaurus Audiovisuele Archieven </name>
 	<description>Indexer Gemeenschappelijke Thesaurus Audiovisuele Archieven </description>
 	<dependencies>
  		<dependency>
 			<groupId>nl.beng.gtaa.commons</groupId>
 			<artifactId>gtaa-commons</artifactId>
-			<version>0.0.1</version>
+			<version>0.0.2-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
