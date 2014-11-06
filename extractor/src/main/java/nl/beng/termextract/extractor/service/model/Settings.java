@@ -4,7 +4,6 @@ import java.text.MessageFormat;
 import java.util.Map.Entry;
 import java.util.Properties;
 
-import nl.beng.termextract.extractor.repository.namedentity.NamedEntity;
 import nl.beng.termextract.extractor.repository.namedentity.NamedEntityType;
 
 import org.slf4j.Logger;
@@ -21,6 +20,7 @@ public class Settings {
 	private static final String TOKENIZER_MIN_SCORE = "tokenizer.min.score";
 	private static final String NAMEDENTITY_MIN_TOKEN_FREQUENCY = "namedentity.{0}.min.token.frequency";
 	private static final String NAMEDENTITY_MIN_SCORE = "namedentity.{0}.min.score";
+	private static final String NAMEDENTITY_REPOSITORY = "namedentity.repository";
 
 	private Properties properties = new Properties();
 
@@ -77,5 +77,10 @@ public class Settings {
 		String propertyName = MessageFormat.format(
 				NAMEDENTITY_MIN_TOKEN_FREQUENCY, namedEntityType.toValue());
 		return Integer.valueOf((String) this.properties.get(propertyName));
+	}
+
+	public String getNamedEntityRepository() {
+		return String.valueOf((String) this.properties
+				.get(NAMEDENTITY_REPOSITORY));
 	}
 }

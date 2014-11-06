@@ -21,6 +21,7 @@
 				<prop key="namedentity.organization.min.score">${nl.beng.termextract.namedentity.organization.min.score}</prop>
 				<prop key="namedentity.location.min.score">${nl.beng.termextract.namedentity.location.min.score}</prop>
 				<prop key="namedentity.misc.min.score">${nl.beng.termextract.namedentity.misc.min.score}</prop>
+				<prop key="namedentity.repository">${nl.beng.termextract.namedentity.repository}</prop>
 			</props>
 		</constructor-arg>
 	</bean>

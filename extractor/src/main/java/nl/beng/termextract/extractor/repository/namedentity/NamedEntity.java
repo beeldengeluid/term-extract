@@ -21,5 +21,10 @@ public class NamedEntity {
 	public void setText(String text) {
 		this.text = text;
 	}
+
+	@Override
+	public String toString() {
+		return "NamedEntity [type=" + type + ", text=" + text + "]";
+	}
 	
 }

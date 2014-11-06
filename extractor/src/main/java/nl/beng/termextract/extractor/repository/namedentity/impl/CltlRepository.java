@@ -24,11 +24,9 @@ import org.dom4j.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
 @Repository
-@Primary
 public class CltlRepository implements NamedEntityRecognitionRepository {
 
 	private static final Logger logger = LoggerFactory

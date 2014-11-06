@@ -8,4 +8,8 @@ public class ExtractionException extends Exception {
 		super(message, throwable);
 	}
 
+	public ExtractionException(String message) {
+		super(message);
+	}
+
 }

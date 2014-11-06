@@ -20,6 +20,8 @@ import nl.beng.termextract.extractor.repository.namedentity.NamedEntity;
 import nl.beng.termextract.extractor.repository.namedentity.NamedEntityExtractionException;
 import nl.beng.termextract.extractor.repository.namedentity.NamedEntityRecognitionRepository;
 import nl.beng.termextract.extractor.repository.namedentity.NamedEntityType;
+import nl.beng.termextract.extractor.repository.namedentity.impl.CltlRepository;
+import nl.beng.termextract.extractor.repository.namedentity.impl.XtasRepository;
 import nl.beng.termextract.extractor.service.ExtractionException;
 import nl.beng.termextract.extractor.service.ExtractorService;
 import nl.beng.termextract.extractor.service.VersionProvider;
@@ -46,13 +48,19 @@ import com.google.common.collect.Multiset.Entry;
 @Service
 public class ExtractorServiceImpl implements ExtractorService {
 
+	private static final String XTAS_REPOSITORY_NAME = "xtas";
+
+	private static final String CLTL_REPOSITORY_NAME = "cltl";
+
 	private static final Logger logger = LoggerFactory
 			.getLogger(ExtractorServiceImpl.class);
 
 	@Autowired
 	private GtaaRepository gtaaRepository;
 	@Autowired
-	private NamedEntityRecognitionRepository namedEntityRecognitionRepository;
+	private XtasRepository xtasRepository;
+	@Autowired
+	private CltlRepository cltlRepository;
 
 	@Autowired
 	private Settings defaultSettings;
@@ -113,6 +121,7 @@ public class ExtractorServiceImpl implements ExtractorService {
 
 	private ExtractResponse doExtract(String text, Settings settings)
 			throws ExtractionException {
+		NamedEntityRecognitionRepository namedEntityRecognitionRepository = getNamedEntityRecognitionRepository(settings);
 		ExtractResponse response = new ExtractResponse();
 		List<Match> matches = new LinkedList<>();
 		Multiset<GtaaDocument> gtaaMatches = HashMultiset.create();
@@ -141,6 +150,21 @@ public class ExtractorServiceImpl implements ExtractorService {
 
 		}
 		return response;
+	}
+
+	private NamedEntityRecognitionRepository getNamedEntityRecognitionRepository(
+			Settings settings) throws ExtractionException {
+		String repositoryName = settings.getNamedEntityRepository();
+		switch (repositoryName) {
+		case CLTL_REPOSITORY_NAME:
+			return cltlRepository;
+		case XTAS_REPOSITORY_NAME:
+			return xtasRepository;
+		default:
+			throw new ExtractionException("Unknown named entity repository '"
+					+ repositoryName + "'");
+		}
+
 	}
 
 	private void sortMatches(List<Match> matches) {
@@ -173,7 +197,8 @@ public class ExtractorServiceImpl implements ExtractorService {
 		Multiset<GtaaDocument> frequentGtaaMatches = HashMultiset.create();
 		Multiset<GtaaDocument> gtaaMatches = HashMultiset.create();
 		for (NamedEntity namedEntity : namedEntities) {
-			Float minScore = settings.getNamedEntityMinScore(namedEntity.getType());
+			Float minScore = settings.getNamedEntityMinScore(namedEntity
+					.getType());
 			switch (namedEntity.getType()) {
 			case PERSON:
 				gtaaMatches.addAll(gtaaRepository.find(namedEntity.getText(),
@@ -250,8 +275,12 @@ public class ExtractorServiceImpl implements ExtractorService {
 			Integer wordFrequency = this.wordFrequencyMap.get(token
 					.getElement());
 			wordFrequency = wordFrequency == null ? 1 : wordFrequency;
+            
+//			if (termList.get(i).normfrequency >= threshold){
+
+			
 			double normfrequency = token.getCount() / wordFrequency;
-			if (normfrequency < settings.getTokenizerMinNormFrequency()) {
+			if (normfrequency >= settings.getTokenizerMinNormFrequency()) {
 				logger.debug("Uncommon token found: '" + token.getElement()
 						+ "' normfrequency '" + normfrequency + "'");
 				uncommonTokens.add(token.getElement(), token.getCount());
