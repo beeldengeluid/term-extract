@@ -38,7 +38,7 @@ import se.kb.oai.pmh.RecordsList;
 @Component(value = "indexer")
 public class Indexer {
 
-	private static final String INITIAL_FROM_DATE = "2007-01-01T12:00:00";
+	private static final String INITIAL_FROM_DATE = "2012-10-01T12:00:00";
 	private static final String GTAA_GEOGRAFISCHE_NAMEN_SCHEME = "http://data.beeldengeluid.nl/gtaa/GeografischeNamen";
 	private static final String GTAA_NAMEN_SCHEME = "http://data.beeldengeluid.nl/gtaa/Namen";
 	private static final String GTAA_PERSOONSNAMEN_SCHEME = "http://data.beeldengeluid.nl/gtaa/Persoonsnamen";
@@ -181,13 +181,6 @@ public class Indexer {
 				.prepareGet(indexName, IndexStatus.DOCUMENT_NAME, IndexStatus.ID).execute()
 				.actionGet();
 		ResultsMapper mapper = new DefaultResultMapper();
-//		NativeSearchQueryBuilder queryBuilder = new NativeSearchQueryBuilder();
-//		
-//		queryBuilder.withIndices(indexName).withQuery(
-//				QueryBuilders.idsQuery(IndexStatus.DOCUMENT_NAME).addIds(
-//						IndexStatus.ID));
-//		List<IndexStatus> statusList = template.queryForList(
-//				queryBuilder.build(), IndexStatus.class);
 		return mapper.mapResult(response, IndexStatus.class);
 	}
 
