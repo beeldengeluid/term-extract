@@ -7,9 +7,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-@Document(type = "GtaaDocument", indexName = "gtaa")
+@Document(type = GtaaDocument.DOCUMENT_NAME, indexName = "gtaa")
 public class GtaaDocument {
 
+	public static final String DOCUMENT_NAME = "gtaa_document";
+	
 	@JsonProperty
 	@Id
 	private String id;
@@ -21,7 +23,7 @@ public class GtaaDocument {
 	private String altLabel;
 	@JsonProperty
 	@JsonInclude(value = Include.NON_NULL)
-	private String conceptScheme;
+	private String[] conceptSchemes;
 	@JsonProperty
 	@JsonInclude(value = Include.NON_NULL)
 	private String uri;
@@ -55,12 +57,12 @@ public class GtaaDocument {
 		this.altLabel = altLabel;
 	}
 
-	public String getConceptScheme() {
-		return conceptScheme;
+	public String[] getConceptSchemes() {
+		return conceptSchemes;
 	}
 
-	public void setConceptScheme(String conceptScheme) {
-		this.conceptScheme = conceptScheme;
+	public void setConceptSchemes(String[] conceptSchemes) {
+		this.conceptSchemes = conceptSchemes;
 	}
 
 	public String getUri() {
@@ -124,7 +126,7 @@ public class GtaaDocument {
 	public String toString() {
 		return "GtaaDocument [id=" + id + ", score=" + score + ", prefLabel="
 				+ prefLabel + ", altLabel=" + altLabel + ", conceptScheme="
-				+ conceptScheme + ", uri=" + uri + ", type=" + type + "]";
+				+ conceptSchemes + ", uri=" + uri + ", type=" + type + "]";
 	}
 
 }

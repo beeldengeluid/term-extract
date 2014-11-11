@@ -8,6 +8,7 @@
 	<groupId>nl.beng.gtaa.indexer</groupId>
 	<artifactId>gtaa-indexer</artifactId>
 	<version>0.0.2-SNAPSHOT</version>
+	<packaging>war</packaging>
 	<name>Indexer Gemeenschappelijke Thesaurus Audiovisuele Archieven </name>
 	<description>Indexer Gemeenschappelijke Thesaurus Audiovisuele Archieven </description>
 	<dependencies>
@@ -28,6 +29,10 @@
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-beans</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-webmvc</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -123,5 +128,35 @@
 				<filtering>true</filtering>
 			</resource>
 		</resources>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>1.8</version>
+                <executions>
+                    <execution>
+                        <id>attach-artifacts</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>attach-artifact</goal>
+                        </goals>
+                        <configuration>
+                            <artifacts>
+                                <artifact>
+                                    <file>${basedir}/src/main/resources/gtaa_mappings.json</file>
+                                    <type>json</type>
+                                    <classifier>settings</classifier>
+                                </artifact>
+                                <artifact>
+                                    <file>${basedir}/src/main/resources/gtaa_settings.json</file>
+                                    <type>json</type>
+                                    <classifier>mappings</classifier>
+                                </artifact>
+                            </artifacts>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
 	</build>
 </project>

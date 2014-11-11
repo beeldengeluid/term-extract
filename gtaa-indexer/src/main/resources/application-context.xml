@@ -27,7 +27,6 @@
 
 
     <context:component-scan base-package="nl.beng.gtaa.indexer"/>
-    <context:component-scan base-package="nl.beng.gtaa.model"/>
     
     <elasticsearch:repositories base-package="nl.beng.gtaa.indexer"/>
 

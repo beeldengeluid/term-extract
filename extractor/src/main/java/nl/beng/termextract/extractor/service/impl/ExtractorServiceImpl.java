@@ -1,8 +1,8 @@
 package nl.beng.termextract.extractor.service.impl;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Collections;
@@ -74,7 +74,9 @@ public class ExtractorServiceImpl implements ExtractorService {
 		wordFrequencyMap = new HashMap<>();
 		BufferedReader reader = null;
 		try {
-			reader = new BufferedReader(new FileReader(wordFrequencyFileName));
+			reader = new BufferedReader(new InputStreamReader(Thread
+					.currentThread().getContextClassLoader()
+					.getResourceAsStream(wordFrequencyFileName)));
 			String line = null;
 			while ((line = reader.readLine()) != null) {
 				String[] words = line.split(";");
@@ -185,8 +187,8 @@ public class ExtractorServiceImpl implements ExtractorService {
 		match.setPrefLabel(document.getPrefLabel());
 		match.setAltLabel(document.getAltLabel());
 		match.setScore(document.getScore());
-		if (document.getConceptScheme() != null) {
-			match.setConceptSchemes(document.getConceptScheme().split(" "));
+		if (document.getConceptSchemes() != null) {
+			match.setConceptSchemes(document.getConceptSchemes());
 		}
 		return match;
 	}
@@ -275,7 +277,7 @@ public class ExtractorServiceImpl implements ExtractorService {
 			Integer wordFrequency = this.wordFrequencyMap.get(token
 					.getElement());
 			wordFrequency = wordFrequency == null ? 1 : wordFrequency;
-            
+
 			double normfrequency = token.getCount() / wordFrequency;
 			if (normfrequency >= settings.getTokenizerMinNormFrequency()) {
 				logger.debug("Uncommon token found: '" + token.getElement()

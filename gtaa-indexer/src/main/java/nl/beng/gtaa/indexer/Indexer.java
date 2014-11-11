@@ -9,16 +9,24 @@ import nl.beng.gtaa.model.GtaaType;
 import org.apache.commons.lang.StringUtils;
 import org.dom4j.Attribute;
 import org.dom4j.Element;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.DateTimeFormatterBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.query.GetQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import se.kb.oai.OAIException;
+import se.kb.oai.pmh.ErrorResponseException;
 import se.kb.oai.pmh.OaiPmhServer;
 import se.kb.oai.pmh.Record;
 import se.kb.oai.pmh.RecordsList;
@@ -26,6 +34,7 @@ import se.kb.oai.pmh.RecordsList;
 @Component(value = "indexer")
 public class Indexer {
 
+	private static final String INITIAL_FROM_DATE = "2007-01-01T12:00:00";
 	private static final String GTAA_GEOGRAFISCHE_NAMEN_SCHEME = "http://data.beeldengeluid.nl/gtaa/GeografischeNamen";
 	private static final String GTAA_NAMEN_SCHEME = "http://data.beeldengeluid.nl/gtaa/Namen";
 	private static final String GTAA_PERSOONSNAMEN_SCHEME = "http://data.beeldengeluid.nl/gtaa/Persoonsnamen";
@@ -36,7 +45,13 @@ public class Indexer {
 	private static final String ALT_LABEL_ELEMENT = "altLabel";
 	private static final String RESOURCE_ATTRIBUTE = "resource";
 	private static final String URI_ATTRIBUTE = "about";
+	private static final String DATE_ACCEPTED_ELEMENT = "dateAccepted";
 	private static final Logger logger = LoggerFactory.getLogger(Indexer.class);
+	private static final String INDEX_SETTINGS_PATH = "gtaa_settings.json";
+	private static final String INDEX_MAPPING_PATH = "gtaa_mappings.json";
+
+	protected static final DateTimeFormatter dateFormat = new DateTimeFormatterBuilder()
+			.appendPattern("yyyy-MM-dd'T'HH:mm:ss").toFormatter().withZoneUTC();
 
 	@Autowired
 	private ElasticsearchTemplate template;
@@ -46,14 +61,69 @@ public class Indexer {
 	private String metaDataPrefix;
 	@Value("${nl.beng.gtaa.elasticsearch.index.name}")
 	private String indexName;
+	@Value("${nl.beng.gtaa.oai.indexer.buffer.days}")
+	private int buffer;
+	@Value("${nl.beng.gtaa.oai.indexer.update.period.days}")
+	private int updatePeriod;
+	@Value("${nl.beng.gtaa.oai.set}")
+	private String gtaaSet;
 
-	public void index() {
-		logger.info("Start harvesting oai metadata. ");
+	@Scheduled(cron = "${nl.beng.gtaa.oai.indexer.cron}")
+	public void update() {
+		if (!template.indexExists(indexName)) {
+			template.createIndex(indexName, ElasticsearchTemplate
+					.readFileFromClasspath(INDEX_SETTINGS_PATH));
+			template.putMapping(indexName, GtaaDocument.DOCUMENT_NAME,
+					ElasticsearchTemplate
+							.readFileFromClasspath(INDEX_MAPPING_PATH));
+		}
+		logger.info("Start harvesting oai metadata in update mode. ");
 		OaiPmhServer server = new OaiPmhServer(oaiPmhServerUrl);
+		String untilDate = null;
+		int bufferForThisRun = buffer;
 		try {
-			logger.info("harvesting....");
-			RecordsList recordsList = server.listRecords(metaDataPrefix);
-			while (recordsList.size() > 0) {
+			String fromDate = INITIAL_FROM_DATE;
+			do {
+				IndexStatus indexStatus = getIndexStatus();
+				if (indexStatus != null
+						&& !StringUtils.isBlank(indexStatus.getLastFromDate())) {
+					fromDate = getLastFromDate(indexStatus, bufferForThisRun);
+					// only use buffer in first iteration, after that set it to
+					// 0.
+					bufferForThisRun = 0;
+				}
+				untilDate = getUntilDate(fromDate);
+				harvest(server, fromDate, untilDate);
+
+			} while (!isAfterToday(untilDate));
+		} catch (OAIException e) {
+			logger.error("Error during harvesting oai metadata. ", e);
+		} finally {
+			logger.info("Finished harvesting oai metadata in update mode. ");
+		}
+
+	}
+
+	private String getLastFromDate(IndexStatus indexStatus, int buffer) {
+		// We extract three days from the from date that was recorded to be quit
+		// sure nothing got modified with a date before the from date.
+		return dateFormat.print(dateFormat.parseDateTime(
+				indexStatus.getLastFromDate()).minusDays(buffer));
+	}
+
+	private boolean isAfterToday(String dateString) {
+		DateTime today = new DateTime();
+		return dateFormat.parseDateTime(dateString).isAfter(today);
+	}
+
+	private void harvest(OaiPmhServer server, String fromDate, String untilDate)
+			throws OAIException {
+		logger.info("harvesting from '" + fromDate + "' until '" + untilDate
+				+ "' ");
+		try {
+			RecordsList recordsList = server.listRecords(metaDataPrefix,
+					fromDate, untilDate, gtaaSet);
+			while (recordsList.size() > 0 && recordsList != null) {
 				List<GtaaDocument> gtaaDocuments = createGtaaDocuments(recordsList);
 				logger.info("harvested '" + gtaaDocuments.size()
 						+ "' documents.");
@@ -62,16 +132,54 @@ public class Indexer {
 				index(gtaaDocuments);
 				logger.info("Indexed '" + gtaaDocuments.size() + "' documents.");
 				logger.info("harvesting....");
+				if (recordsList.getResumptionToken() == null) {
+					break;
+				}
 				recordsList = server.listRecords(recordsList
 						.getResumptionToken());
-
 			}
-
-		} catch (OAIException e) {
-			logger.error("Error during harvesting oai metadata. ", e);
-		} finally {
-			logger.info("Finished harvesting oai metadata. ");
+			updateIndexStatus(untilDate);
+		} catch (ErrorResponseException e) {
+			if (ErrorResponseException.NO_RECORDS_MATCH.equalsIgnoreCase(e
+					.getCode())) {
+				{
+					updateIndexStatus(untilDate);
+				}
+			} else {
+				throw e;
+			}
 		}
+	}
+
+	private String getUntilDate(String fromDate) {
+		return dateFormat.print(dateFormat.parseDateTime(fromDate).plusDays(
+				updatePeriod));
+	}
+
+	private void updateIndexStatus(String untilDate) {
+		IndexQuery query = new IndexQuery();
+		IndexStatus status = new IndexStatus();
+		if (isAfterToday(untilDate)) {
+			status.setLastFromDate(dateFormat.print(new DateTime()));
+		} else {
+			status.setLastFromDate(untilDate);
+		}
+		query.setId(status.getId());
+		query.setIndexName(indexName);
+		query.setObject(status);
+		template.index(query);
+	}
+
+	private IndexStatus getIndexStatus() {
+		GetQuery query = new GetQuery();
+		query.setId(IndexStatus.ID);
+		NativeSearchQueryBuilder queryBuilder = new NativeSearchQueryBuilder();
+		queryBuilder.withIndices(indexName).withQuery(
+				QueryBuilders.idsQuery(IndexStatus.DOCUMENT_NAME).addIds(
+						IndexStatus.ID));
+		List<IndexStatus> statusList = template.queryForList(
+				queryBuilder.build(), IndexStatus.class);
+		return statusList.size() <= 0 ? null : statusList.get(0);
 	}
 
 	private void index(List<GtaaDocument> documents) {
@@ -108,14 +216,15 @@ public class Indexer {
 				&& record.getMetadata().elements().size() > 0) {
 			Element data = (Element) record.getMetadata().elements().get(0);
 			Attribute uriAttribute = data.attribute(URI_ATTRIBUTE);
+			Element dateAcceptedElement = data.element(DATE_ACCEPTED_ELEMENT);
 			if (uriAttribute != null
-					&& StringUtils.isNotEmpty(uriAttribute.getText())) {
+					&& StringUtils.isNotBlank(uriAttribute.getText())) {
 				String conceptScheme = extractConceptScheme(data
 						.elements(IN_SCHEME_ELEMENT));
 				GtaaType type = extractGtaaType(conceptScheme);
-				if (type != null) {
+				if (type != null && dateAcceptedElement != null) {
 					gtaaDocument = new GtaaDocument();
-					String uri = data.attribute(URI_ATTRIBUTE).getText();
+					String uri = uriAttribute.getText();
 					gtaaDocument.setType(type);
 					gtaaDocument.setId(uri.replaceAll("/", "_"));
 					gtaaDocument.setUri(uri);
@@ -123,7 +232,10 @@ public class Indexer {
 							.elements(ALT_LABEL_ELEMENT)));
 					gtaaDocument.setPrefLabel(extractTextFromElements(data
 							.elements(PREF_LABEL_ELEMENT)));
-					gtaaDocument.setConceptScheme(conceptScheme);
+					if (StringUtils.isNotBlank(conceptScheme)) {
+						gtaaDocument
+								.setConceptSchemes(conceptScheme.split(" "));
+					}
 				}
 			}
 
@@ -132,7 +244,7 @@ public class Indexer {
 	}
 
 	private GtaaType extractGtaaType(String conceptScheme) {
-		if (StringUtils.isNotEmpty(conceptScheme)) {
+		if (StringUtils.isNotBlank(conceptScheme)) {
 			if (conceptScheme.contains(GTAA_SCHEME)) {
 				for (String scheme : conceptScheme.split(" ")) {
 					if (GTAA_ONDERWERPEN_SCHEME.equals(scheme)) {
@@ -178,7 +290,7 @@ public class Indexer {
 		}
 		String extractedValue = null;
 		for (Element element : elements) {
-			if (StringUtils.isNotEmpty(element.getText())) {
+			if (StringUtils.isNotBlank(element.getText())) {
 				if (extractedValue != null) {
 					extractedValue += " ";
 					extractedValue += element.getText();
@@ -201,7 +313,7 @@ public class Indexer {
 		try {
 			context = new FileSystemXmlApplicationContext(contextFile);
 			Indexer indexer = (Indexer) context.getBean("indexer");
-			indexer.index();
+			indexer.update();
 		} finally {
 			if (context != null) {
 				context.close();

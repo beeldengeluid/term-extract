@@ -17,17 +17,13 @@
         <property name="placeholderPrefix" value="${"/>
         <property name="locations">
             <list>
-                <value>classpath:/extractor.properties</value>
-                <value>file:${user.home}/appdata/term-extract/config/extractor.properties</value>
-                <value>file:${config.dir}/extractor.properties</value>
+                <value>classpath:/gtaa-indexer.properties</value>
+                <value>file:${user.home}/appdata/gtaa-indexer/config/gtaa-indexer.properties</value>
+				<value>file:${config.dir}/gtaa-indexer.properties</value>
             </list>
         </property>
     </bean>
 
-    <import resource="classpath:/service-settings.xml"/>
-
-    <context:component-scan base-package="nl.beng.termextract.extractor.rest"/>
-	<context:component-scan base-package="nl.beng.termextract.extractor.service" />
     <mvc:annotation-driven/>
 
 </beans>
