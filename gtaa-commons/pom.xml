@@ -3,11 +3,11 @@
   <parent>
     <groupId>nl.beng.termextract</groupId>
     <artifactId>term-extract</artifactId>
-    <version>1.1</version>
+    <version>1.2-SNAPSHOT</version>
   </parent>
   <groupId>nl.beng.gtaa.commons</groupId>
   <artifactId>gtaa-commons</artifactId>
-  <version>1.1</version>
+  <version>1.2-SNAPSHOT</version>
   <name>GTAA Commons</name>
   <description>Commons Gemeenschappelijke Thesaurus Audiovisuele Archieven </description>
 	<dependencies>
