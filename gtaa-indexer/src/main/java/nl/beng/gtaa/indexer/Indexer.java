@@ -9,6 +9,9 @@ import nl.beng.gtaa.model.GtaaType;
 import org.apache.commons.lang.StringUtils;
 import org.dom4j.Attribute;
 import org.dom4j.Element;
+import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.client.Client;
+import org.elasticsearch.index.mapper.Mapper;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
@@ -18,8 +21,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
+import org.springframework.data.elasticsearch.core.DefaultResultMapper;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
-import org.springframework.data.elasticsearch.core.query.GetQuery;
+import org.springframework.data.elasticsearch.core.ResultsMapper;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -67,6 +71,8 @@ public class Indexer {
 	private int updatePeriod;
 	@Value("${nl.beng.gtaa.oai.set}")
 	private String gtaaSet;
+	@Autowired
+	private Client client;
 
 	@Scheduled(cron = "${nl.beng.gtaa.oai.indexer.cron}")
 	public void update() {
@@ -171,15 +177,18 @@ public class Indexer {
 	}
 
 	private IndexStatus getIndexStatus() {
-		GetQuery query = new GetQuery();
-		query.setId(IndexStatus.ID);
-		NativeSearchQueryBuilder queryBuilder = new NativeSearchQueryBuilder();
-		queryBuilder.withIndices(indexName).withQuery(
-				QueryBuilders.idsQuery(IndexStatus.DOCUMENT_NAME).addIds(
-						IndexStatus.ID));
-		List<IndexStatus> statusList = template.queryForList(
-				queryBuilder.build(), IndexStatus.class);
-		return statusList.size() <= 0 ? null : statusList.get(0);
+		GetResponse response = client
+				.prepareGet(indexName, IndexStatus.DOCUMENT_NAME, IndexStatus.ID).execute()
+				.actionGet();
+		ResultsMapper mapper = new DefaultResultMapper();
+//		NativeSearchQueryBuilder queryBuilder = new NativeSearchQueryBuilder();
+//		
+//		queryBuilder.withIndices(indexName).withQuery(
+//				QueryBuilders.idsQuery(IndexStatus.DOCUMENT_NAME).addIds(
+//						IndexStatus.ID));
+//		List<IndexStatus> statusList = template.queryForList(
+//				queryBuilder.build(), IndexStatus.class);
+		return mapper.mapResult(response, IndexStatus.class);
 	}
 
 	private void index(List<GtaaDocument> documents) {
