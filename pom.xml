@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>nl.beng.termextract</groupId>
 	<artifactId>term-extract</artifactId>
-	<version>0.0.2-SNAPSHOT</version>
+	<version>1.1-SNAPSHOT</version>
 	<name>Term extractie root project</name>
 	<description>Term extractie uit Gemeenschappelijke Thesaurus Audiovisuele Archieven and other sources</description>
 	<packaging>pom</packaging>
