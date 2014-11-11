@@ -11,13 +11,7 @@
   <name>GTAA Commons</name>
   <description>Commons Gemeenschappelijke Thesaurus Audiovisuele Archieven </description>
 	<dependencies>
-<!-- 		<dependency>
-			<groupId>nl.beng.gtaa.commons</groupId>
-			<artifactId>gta-commons</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-			<scope>compile</scope>
-		</dependency>
- -->		<dependency>
+		<dependency>
 			<groupId>se.kb</groupId>
 			<artifactId>oai4j</artifactId>
 		</dependency>
