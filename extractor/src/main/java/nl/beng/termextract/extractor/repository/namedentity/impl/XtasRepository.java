@@ -41,6 +41,10 @@ public class XtasRepository implements NamedEntityRecognitionRepository {
 	public void setXtasUrl(String xtasUrl) throws MalformedURLException {
 		this.xtasUrl = new URL(xtasUrl);
 	}
+	@Value("${nl.beng.termextract.namedentity.xtas.apikey}")
+	private String apiKey;
+	@Value("${nl.beng.termextract.namedentity.xtas.apicontext}")
+	private String apiContext;
 
 	@Override
 	public List<NamedEntity> extract(String text)
@@ -48,11 +52,18 @@ public class XtasRepository implements NamedEntityRecognitionRepository {
 		logger.info("Start extract(text)");
 		List<NamedEntity> namedEntities = new LinkedList<>();
 		String taskId = null;
+		String contextPlusApiKey = RUN_FROG_CONTEXT;
+		if (StringUtils.isNotBlank(apiKey) && StringUtils.isNotBlank(apiContext)) {
+		    contextPlusApiKey = apiContext + contextPlusApiKey + apiKey;
+		}
 		try {
-			taskId = postData(new URL(xtasUrl, RUN_FROG_CONTEXT),
+			taskId = postData(new URL(xtasUrl, contextPlusApiKey),
 					"{\"data\": \"" + text + "\"}");
+			if (StringUtils.isNotBlank(apiKey)) {
+			    taskId = taskId + apiKey;
+			}
 			logger.debug("xtas taskid:" + taskId);
-			String result = getData(new URL(xtasUrl, "/result/" + taskId));
+			String result = getData(new URL(xtasUrl, "/xtas/result/" + taskId));
 			namedEntities = parseXtasResponse(result);
 		} catch (MalformedURLException e) {
 			String message = "Error during xtas extraction.";
