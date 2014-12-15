@@ -55,18 +55,17 @@ public class XtasRepository implements NamedEntityRecognitionRepository {
 		String taskId = null;
 		String resultPath = RESULT_PATH;
 		String contextPlusKey = RUN_FROG_CONTEXT;
-		if (StringUtils.isNotBlank(apiKey) && StringUtils.isNotBlank(apiContext)) {
+		boolean useNewXtas = StringUtils.isNotBlank(apiKey) && StringUtils.isNotBlank(apiContext);
+		if (useNewXtas) {
 		    contextPlusKey = apiContext + contextPlusKey + apiKey;
+		    resultPath = apiContext + resultPath;
 		}
 		try {
 			taskId = postData(new URL(xtasUrl, contextPlusKey),
 					"{\"data\": \"" + text + "\"}");
-			if (StringUtils.isNotBlank(apiKey)) {
-			    taskId = taskId + apiKey;
-			}
 			logger.debug("xtas taskid:" + taskId);
-			if (StringUtils.isNotBlank(apiContext)) {
-			    resultPath = apiContext + resultPath;
+			if (useNewXtas) {
+			    taskId = taskId + apiKey;
 			}
 			String result = getData(new URL(xtasUrl, resultPath + taskId));
 			namedEntities = parseXtasResponse(result);
