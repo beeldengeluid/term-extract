@@ -31,6 +31,7 @@ public class XtasRepository implements NamedEntityRecognitionRepository {
 	private static final int TOKEN_ENCODING_FIELD_POS = 6;
 
 	private static final String RUN_FROG_CONTEXT = "/run/frog";
+	private static final String RESULT_PATH = "/result/";
 
 	private static final Logger logger = LoggerFactory
 			.getLogger(XtasRepository.class);
@@ -52,18 +53,22 @@ public class XtasRepository implements NamedEntityRecognitionRepository {
 		logger.info("Start extract(text)");
 		List<NamedEntity> namedEntities = new LinkedList<>();
 		String taskId = null;
-		String contextPlusApiKey = RUN_FROG_CONTEXT;
+		String resultPath = RESULT_PATH;
+		String contextPlusKey = RUN_FROG_CONTEXT;
 		if (StringUtils.isNotBlank(apiKey) && StringUtils.isNotBlank(apiContext)) {
-		    contextPlusApiKey = apiContext + contextPlusApiKey + apiKey;
+		    contextPlusKey = apiContext + contextPlusKey + apiKey;
 		}
 		try {
-			taskId = postData(new URL(xtasUrl, contextPlusApiKey),
+			taskId = postData(new URL(xtasUrl, contextPlusKey),
 					"{\"data\": \"" + text + "\"}");
 			if (StringUtils.isNotBlank(apiKey)) {
 			    taskId = taskId + apiKey;
 			}
 			logger.debug("xtas taskid:" + taskId);
-			String result = getData(new URL(xtasUrl, "/xtas/result/" + taskId));
+			if (StringUtils.isNotBlank(apiContext)) {
+			    resultPath = apiContext + resultPath;
+			}
+			String result = getData(new URL(xtasUrl, resultPath + taskId));
 			namedEntities = parseXtasResponse(result);
 		} catch (MalformedURLException e) {
 			String message = "Error during xtas extraction.";
