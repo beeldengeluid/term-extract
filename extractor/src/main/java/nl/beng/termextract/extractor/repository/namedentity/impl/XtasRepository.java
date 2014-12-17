@@ -93,7 +93,50 @@ public class XtasRepository implements NamedEntityRecognitionRepository {
 						String tokens = responseItemFields[TOKEN_FIELD_POS];
 						String tokenEncoding = responseItemFields[TOKEN_ENCODING_FIELD_POS];
 						//namedEntities.addAll(parse(tokens, tokenEncoding));
-						parse(tokens, tokenEncoding, namedEntities);
+						//parse(tokens, tokenEncoding, namedEntities);
+						String[] tokenArray = tokens.split("_");
+				        String[] tokenEncodingArray = tokenEncoding.split("_");
+				        int index = 0;
+				        NamedEntity namedEntity = null;
+				        if (tokenArray.length != tokenEncodingArray.length) {
+				            logger.warn("Tokens '" + tokens + "' do not match token '"
+				                    + tokenEncoding + "' encoding.");
+				            return null;
+				        }
+				        for (String token : tokenArray) {
+				            String encoding = tokenEncodingArray[index];
+				            if (encoding.indexOf("-") == 1) {
+				                String tag = encoding.substring(0, encoding.indexOf("-"));
+				                String type = encoding.substring(encoding.indexOf("-") + 1);
+				                if (!StringUtils.isBlank(type)) {
+				                    if (tag.equals("B")) {
+				                        if (namedEntity != null) {
+				                            logger.debug("Named entity extracted '" + namedEntity + "'" );
+				                            // we already have a named entity
+				                            namedEntities.add(namedEntity);
+				                        }
+				                        NamedEntityType namedEntityType = extractNamedEntityType(type);
+				                        if (namedEntityType != null) {
+				                            namedEntity = new NamedEntity();
+				                            namedEntity.setType(namedEntityType);
+				                            namedEntity.setText(token);
+				                        }
+				                    } else if (tag.equals("I")) {
+				                        /*if (namedEntity != null) {
+				                            namedEntity.setText(namedEntity.getText() + " "
+				                                    + token);
+				                        }*/
+				                        String lastToken = namedEntities.get(namedEntities.size()-1).getText();
+				                        namedEntities.get(namedEntities.size()-1).setText(lastToken + " " + token); 
+				                    }
+				                }
+				            }
+				            index++;
+				        }
+				        if (namedEntity != null) {
+				            logger.debug("Named entity extracted '" + namedEntity + "'" );
+				            namedEntities.add(namedEntity);
+				        }
 					}
 				}
 			}
