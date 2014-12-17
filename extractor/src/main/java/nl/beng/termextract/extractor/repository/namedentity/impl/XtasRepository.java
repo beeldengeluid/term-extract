@@ -83,7 +83,7 @@ public class XtasRepository implements NamedEntityRecognitionRepository {
 		List<NamedEntity> namedEntities = new LinkedList<>();
 		ObjectMapper mapper = new ObjectMapper();
 		try {
-			logger.debug(xtasResponseString);
+			//logger.debug(xtasResponseString);
 			String[] responseArray = mapper.readValue(xtasResponseString,
 					String[].class);
 			for (String responseItem : responseArray) {
@@ -111,7 +111,7 @@ public class XtasRepository implements NamedEntityRecognitionRepository {
 				                if (!StringUtils.isBlank(type)) {
 				                    if (tag.equals("B")) {
 				                        if (namedEntity != null) {
-				                            logger.debug("Named entity extracted '" + namedEntity + "'" );
+				                            //logger.debug("Named entity extracted '" + namedEntity + "'" );
 				                            // we already have a named entity
 				                            namedEntities.add(namedEntity);
 				                        }
@@ -134,7 +134,7 @@ public class XtasRepository implements NamedEntityRecognitionRepository {
 				            index++;
 				        }
 				        if (namedEntity != null) {
-				            logger.debug("Named entity extracted '" + namedEntity + "'" );
+				            //logger.debug("Named entity extracted '" + namedEntity + "'" );
 				            namedEntities.add(namedEntity);
 				        }
 					}
