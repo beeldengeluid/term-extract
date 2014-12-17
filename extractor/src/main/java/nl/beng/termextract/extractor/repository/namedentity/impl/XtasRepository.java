@@ -92,7 +92,8 @@ public class XtasRepository implements NamedEntityRecognitionRepository {
 					if (responseItemFields.length == NUMBER_OF_TOKEN_LINE_COLUMNS) {
 						String tokens = responseItemFields[TOKEN_FIELD_POS];
 						String tokenEncoding = responseItemFields[TOKEN_ENCODING_FIELD_POS];
-						namedEntities.addAll(parse(tokens, tokenEncoding));
+						//namedEntities.addAll(parse(tokens, tokenEncoding));
+						parse(tokens, tokenEncoding, namedEntities);
 					}
 				}
 			}
@@ -105,8 +106,8 @@ public class XtasRepository implements NamedEntityRecognitionRepository {
 		return namedEntities;
 	}
 
-	private List<NamedEntity> parse(String tokens, String tokenEncoding) {
-		List<NamedEntity> namedEntities = new LinkedList<>();
+	private List<NamedEntity> parse(String tokens, String tokenEncoding, List<NamedEntity> namedEntities) {
+		//List<NamedEntity> namedEntities = new LinkedList<>();
 		String[] tokenArray = tokens.split("_");
 		String[] tokenEncodingArray = tokenEncoding.split("_");
 		int index = 0;
@@ -135,10 +136,12 @@ public class XtasRepository implements NamedEntityRecognitionRepository {
 							namedEntity.setText(token);
 						}
 					} else if (tag.equals("I")) {
-						if (namedEntity != null) {
+						/*if (namedEntity != null) {
 							namedEntity.setText(namedEntity.getText() + " "
 									+ token);
-						}
+						}*/
+					    String lastToken = namedEntities.get(namedEntities.size()-1).getText();
+					    namedEntities.get(namedEntities.size()-1).setText(lastToken + " " + token); 
 					}
 				}
 			}
