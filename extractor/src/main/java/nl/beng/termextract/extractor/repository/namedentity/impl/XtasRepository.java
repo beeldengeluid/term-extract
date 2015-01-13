@@ -26,7 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Repository
 public class XtasRepository implements NamedEntityRecognitionRepository {
 
-	private static final int NUMBER_OF_TOKEN_LINE_COLUMNS = 10;
+	private static final int NUMBER_OF_TOKEN_LINE_COLUMNS = 8;
 	private static final int TOKEN_FIELD_POS = 1;
 	private static final int TOKEN_ENCODING_FIELD_POS = 6;
 
