@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -14,6 +15,8 @@ import nl.beng.termextract.extractor.repository.namedentity.NamedEntity;
 import nl.beng.termextract.extractor.repository.namedentity.NamedEntityExtractionException;
 import nl.beng.termextract.extractor.repository.namedentity.NamedEntityRecognitionRepository;
 import nl.beng.termextract.extractor.repository.namedentity.NamedEntityType;
+import nl.beng.termextract.extractor.repository.namedentity.Saf;
+import nl.beng.termextract.extractor.repository.namedentity.Token;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -42,9 +45,9 @@ public class XtasRepository implements NamedEntityRecognitionRepository {
 	public void setXtasUrl(String xtasUrl) throws MalformedURLException {
 		this.xtasUrl = new URL(xtasUrl);
 	}
-	@Value("${nl.beng.termextract.namedentity.xtas.apikey}")
+	@Value("${nl.beng.termextract.namedentity.xtas.apikey:@null}")
 	private String apiKey;
-	@Value("${nl.beng.termextract.namedentity.xtas.apicontext}")
+	@Value("${nl.beng.termextract.namedentity.xtas.apicontext:@null}")
 	private String apiContext;
 
 	@Override
@@ -62,13 +65,13 @@ public class XtasRepository implements NamedEntityRecognitionRepository {
 		}
 		try {
 			taskId = postData(new URL(xtasUrl, contextPlusKey),
-					"{\"data\": \"" + text + "\"}");
+					"{\"data\": \"" + text + "\", \"arguments\":{\"output\": \"saf\"}}");
 			logger.debug("xtas taskid:" + taskId);
 			if (useNewXtas) {
 			    taskId = taskId + apiKey;
 			}
-			String result = getData(new URL(xtasUrl, resultPath + taskId));
-			namedEntities = parseXtasResponse(result);
+			Saf result = getData(new URL(xtasUrl, resultPath + taskId));
+			namedEntities = parseXtasSafResponse(result);
 		} catch (MalformedURLException e) {
 			String message = "Error during xtas extraction.";
 			logger.error(message, e);
@@ -103,6 +106,22 @@ public class XtasRepository implements NamedEntityRecognitionRepository {
 			throw new NamedEntityExtractionException(message, e);
 		}
 		return namedEntities;
+	}
+	
+	private List<NamedEntity> parseXtasSafResponse(Saf saf) {
+	    List<NamedEntity> namedEntities = new LinkedList<>();
+	    for (Token token: saf.getTokens()) {
+	        if (token.getNe() != null) {
+	            NamedEntityType type = extractNamedEntityType(token.getNe());
+	            if (type != null) {
+	                NamedEntity namedEntity = new NamedEntity();
+	                namedEntity.setType(type);
+	                namedEntity.setText(token.getWord());
+	                namedEntities.add(namedEntity);
+	            }
+	        }
+	    }
+	    return namedEntities;
 	}
 
 	private List<NamedEntity> parse(String tokens, String tokenEncoding) {
@@ -209,21 +228,18 @@ public class XtasRepository implements NamedEntityRecognitionRepository {
 		return response.toString();
 	}
 
-	private String getData(final URL url) throws NamedEntityExtractionException {
-		StringBuilder response = new StringBuilder();
+	private Saf getData(final URL url) throws NamedEntityExtractionException {
+	    ObjectMapper mapper = new ObjectMapper();
+	    Saf saf = null;
 		HttpURLConnection connection = null;
 		BufferedReader reader = null;
-		OutputStream outputStream = null;
+		OutputStream outputStream = null;		
 		try {
 			connection = (HttpURLConnection) url.openConnection();
 			connection.setDoOutput(true);
 			connection.setRequestMethod("GET");
 			connection.setRequestProperty("Content-Type", "application/json");
-			reader = new BufferedReader(new InputStreamReader(
-					connection.getInputStream()));
-			String line = null;
-			while ((line = reader.readLine()) != null)
-				response.append(line);
+            saf = mapper.readValue(connection.getInputStream(), Saf.class);
 		} catch (IOException e) {
 			String message = "Could not read from url '" + url + "'";
 			logger.error(message, e);
@@ -241,6 +257,7 @@ public class XtasRepository implements NamedEntityRecognitionRepository {
 			}
 		}
 
-		return response.toString();
+		return saf;
 	}
+	
 }
