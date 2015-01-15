@@ -38,6 +38,7 @@ import org.apache.lucene.analysis.util.CharArraySet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -48,7 +49,9 @@ import com.google.common.collect.Multiset.Entry;
 @Service
 public class ExtractorServiceImpl implements ExtractorService {
 
-	private static final String XTAS_REPOSITORY_NAME = "xtas";
+	private static final String XTAS_LOCAL_REPOSITORY_NAME = "xtas-local";
+	
+	private static final String XTAS_904LABS_REPOSITORY_NAME = "xtas";
 
 	private static final String CLTL_REPOSITORY_NAME = "cltl";
 
@@ -58,7 +61,11 @@ public class ExtractorServiceImpl implements ExtractorService {
 	@Autowired
 	private GtaaRepository gtaaRepository;
 	@Autowired
-	private XtasRepository xtasRepository;
+	@Qualifier("labs-xtas")
+	private XtasRepository labsXtasRepository;
+	@Autowired
+	@Qualifier("local-xtas")
+	private XtasRepository localXtasRepository;
 	@Autowired
 	private CltlRepository cltlRepository;
 
@@ -160,8 +167,10 @@ public class ExtractorServiceImpl implements ExtractorService {
 		switch (repositoryName) {
 		case CLTL_REPOSITORY_NAME:
 			return cltlRepository;
-		case XTAS_REPOSITORY_NAME:
-			return xtasRepository;
+		case XTAS_LOCAL_REPOSITORY_NAME:
+			return localXtasRepository;
+		case XTAS_904LABS_REPOSITORY_NAME:
+		    return labsXtasRepository;
 		default:
 			throw new ExtractionException("Unknown named entity repository '"
 					+ repositoryName + "'");
