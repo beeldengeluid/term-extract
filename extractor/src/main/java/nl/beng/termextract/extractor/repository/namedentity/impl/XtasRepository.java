@@ -18,7 +18,6 @@ import nl.beng.termextract.extractor.repository.namedentity.NamedEntityType;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -27,7 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Repository
 public class XtasRepository implements NamedEntityRecognitionRepository {
 
-	private static final int NUMBER_OF_TOKEN_LINE_COLUMNS = 8;
+	private static final int NUMBER_OF_TOKEN_LINE_COLUMNS = 10;
 	private static final int TOKEN_FIELD_POS = 1;
 	private static final int TOKEN_ENCODING_FIELD_POS = 6;
 
@@ -38,28 +37,29 @@ public class XtasRepository implements NamedEntityRecognitionRepository {
 			.getLogger(XtasRepository.class);
 
 	private URL xtasUrl;
+	private String apiKey;
+	private String apiContext;
 	private ObjectMapper jsonMapper = new ObjectMapper();
 
-	@Value(value = "${nl.beng.termextract.namedentity.xtas.url}")
 	public void setXtasUrl(String xtasUrl) throws MalformedURLException {
 		this.xtasUrl = new URL(xtasUrl);
 	}
-	@Value("${nl.beng.termextract.namedentity.xtas.apikey}")
-	private String apiKey;
-	@Value("${nl.beng.termextract.namedentity.xtas.apicontext}")
-	private String apiContext;
-
+	public void setApiKey(String apiKey) {
+	    this.apiKey = apiKey;
+	}
+	public void setApiContext(String apiContext) {
+	    this.apiContext = apiContext;
+	}
+	
 	private static class XtasPayload {
 	    @JsonProperty
 	    private String data;
 
         public XtasPayload(String text) {
             this.data = text;
-        }
-    
+        }   
 	}
-	
-	
+		
 	@Override
 	public List<NamedEntity> extract(String text)
 			throws NamedEntityExtractionException {
@@ -104,7 +104,7 @@ public class XtasRepository implements NamedEntityRecognitionRepository {
 					String[].class);
 			for (String responseItem : responseArray) {
 				if (StringUtils.isNotBlank(responseItem)) {
-					String responseItemFields[] = responseItem.split("	");
+					String responseItemFields[] = responseItem.split("	", -1);
 					if (responseItemFields.length == NUMBER_OF_TOKEN_LINE_COLUMNS) {
 						String tokens = responseItemFields[TOKEN_FIELD_POS];
 						String tokenEncoding = responseItemFields[TOKEN_ENCODING_FIELD_POS];
