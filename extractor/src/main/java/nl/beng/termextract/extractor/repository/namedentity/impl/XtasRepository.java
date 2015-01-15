@@ -18,9 +18,9 @@ import nl.beng.termextract.extractor.repository.namedentity.NamedEntityType;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Repository
@@ -37,16 +37,29 @@ public class XtasRepository implements NamedEntityRecognitionRepository {
 			.getLogger(XtasRepository.class);
 
 	private URL xtasUrl;
+	private String apiKey;
+	private String apiContext;
+	private ObjectMapper jsonMapper = new ObjectMapper();
 
-	@Value(value = "${nl.beng.termextract.namedentity.xtas.url}")
 	public void setXtasUrl(String xtasUrl) throws MalformedURLException {
 		this.xtasUrl = new URL(xtasUrl);
 	}
-	@Value("${nl.beng.termextract.namedentity.xtas.apikey}")
-	private String apiKey;
-	@Value("${nl.beng.termextract.namedentity.xtas.apicontext}")
-	private String apiContext;
+	public void setApiKey(String apiKey) {
+	    this.apiKey = apiKey;
+	}
+	public void setApiContext(String apiContext) {
+	    this.apiContext = apiContext;
+	}
+	
+	private static class XtasPayload {
+	    @JsonProperty
+	    private String data;
 
+        public XtasPayload(String text) {
+            this.data = text;
+        }   
+	}
+		
 	@Override
 	public List<NamedEntity> extract(String text)
 			throws NamedEntityExtractionException {
@@ -61,19 +74,22 @@ public class XtasRepository implements NamedEntityRecognitionRepository {
 		    resultPath = apiContext + resultPath;
 		}
 		try {
-			taskId = postData(new URL(xtasUrl, contextPlusKey),
-					"{\"data\": \"" + text + "\"}");
+		    XtasPayload xtasPayloadObj = new XtasPayload(text); // just to make sure there is escaped quotes in there
+		    String xtasPayloadJson = jsonMapper.writeValueAsString(xtasPayloadObj);
+            logger.debug("payload:" + xtasPayloadJson);
+		    
+			taskId = postData(new URL(xtasUrl, contextPlusKey), xtasPayloadJson);
 			logger.debug("xtas taskid:" + taskId);
 			if (useNewXtas) {
 			    taskId = taskId + apiKey;
 			}
 			String result = getData(new URL(xtasUrl, resultPath + taskId));
 			namedEntities = parseXtasResponse(result);
-		} catch (MalformedURLException e) {
+		} catch (Exception e) {
 			String message = "Error during xtas extraction.";
 			logger.error(message, e);
 			throw new NamedEntityExtractionException(message, e);
-		}
+		} 
 		logger.info("End extract(text)");
 		return namedEntities;
 	}
@@ -88,7 +104,7 @@ public class XtasRepository implements NamedEntityRecognitionRepository {
 					String[].class);
 			for (String responseItem : responseArray) {
 				if (StringUtils.isNotBlank(responseItem)) {
-					String responseItemFields[] = responseItem.split("	");
+					String responseItemFields[] = responseItem.split("	", -1);
 					if (responseItemFields.length == NUMBER_OF_TOKEN_LINE_COLUMNS) {
 						String tokens = responseItemFields[TOKEN_FIELD_POS];
 						String tokenEncoding = responseItemFields[TOKEN_ENCODING_FIELD_POS];
@@ -175,15 +191,17 @@ public class XtasRepository implements NamedEntityRecognitionRepository {
 		BufferedReader reader = null;
 		OutputStream outputStream = null;
 		try {
-			String postData = inputString;
+			byte[] postData = inputString.getBytes("UTF-8");
 			connection = (HttpURLConnection) url.openConnection();
 			connection.setDoOutput(true);
 			connection.setRequestMethod("POST");
-			connection.setRequestProperty("Content-Type", "application/json");
+			connection.setRequestProperty("Content-Type", "application/json"); // might need charset=utf-8 added in case they change the server platform (isn't accepted at time of writing this)
 			connection.setRequestProperty("Content-Length",
-					String.valueOf(postData.length()));
+					String.valueOf(postData.length));
 			outputStream = connection.getOutputStream();
-			outputStream.write(postData.getBytes());
+			outputStream.write(postData);
+			outputStream.flush();
+			
 			reader = new BufferedReader(new InputStreamReader(
 					connection.getInputStream()));
 			String line = null;
