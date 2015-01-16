@@ -25,7 +25,7 @@ public class Token {
     private int sentence;
     @JsonProperty("pos_confidence")
     @JsonInclude(Include.NON_NULL)
-    private int confidence;
+    private double confidence;
     public int getId() {
         return id;
     }
@@ -62,12 +62,6 @@ public class Token {
     public void setSentence(int sentence) {
         this.sentence = sentence;
     }
-    public int getConfidence() {
-        return confidence;
-    }
-    public void setConfidence(int confidence) {
-        this.confidence = confidence;
-    }
     public Object getRel() {
         return rel;
     }
@@ -79,5 +73,11 @@ public class Token {
     }
     public void setNe(String ne) {
         this.ne = ne;
+    }
+    public double getConfidence() {
+        return confidence;
+    }
+    public void setConfidence(double confidence) {
+        this.confidence = confidence;
     }
 }

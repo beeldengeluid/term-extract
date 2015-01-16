@@ -21,7 +21,8 @@ import nl.beng.termextract.extractor.repository.namedentity.NamedEntityExtractio
 import nl.beng.termextract.extractor.repository.namedentity.NamedEntityRecognitionRepository;
 import nl.beng.termextract.extractor.repository.namedentity.NamedEntityType;
 import nl.beng.termextract.extractor.repository.namedentity.impl.CltlRepository;
-import nl.beng.termextract.extractor.repository.namedentity.impl.XtasRepository;
+import nl.beng.termextract.extractor.repository.namedentity.impl.LabsXtasRepository;
+import nl.beng.termextract.extractor.repository.namedentity.impl.LocalXtasRepository;
 import nl.beng.termextract.extractor.service.ExtractionException;
 import nl.beng.termextract.extractor.service.ExtractorService;
 import nl.beng.termextract.extractor.service.VersionProvider;
@@ -38,7 +39,6 @@ import org.apache.lucene.analysis.util.CharArraySet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -61,11 +61,9 @@ public class ExtractorServiceImpl implements ExtractorService {
 	@Autowired
 	private GtaaRepository gtaaRepository;
 	@Autowired
-	@Qualifier("labs-xtas")
-	private XtasRepository labsXtasRepository;
+	private LabsXtasRepository labsXtasRepository;
 	@Autowired
-	@Qualifier("local-xtas")
-	private XtasRepository localXtasRepository;
+	private LocalXtasRepository localXtasRepository;
 	@Autowired
 	private CltlRepository cltlRepository;
 
