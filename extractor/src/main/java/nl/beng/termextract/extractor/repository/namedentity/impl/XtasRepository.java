@@ -6,10 +6,12 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.LinkedList;
 import java.util.List;
 
 import nl.beng.termextract.extractor.repository.namedentity.NamedEntity;
 import nl.beng.termextract.extractor.repository.namedentity.NamedEntityExtractionException;
+import nl.beng.termextract.extractor.repository.namedentity.NamedEntityRecognitionRepository;
 import nl.beng.termextract.extractor.repository.namedentity.NamedEntityType;
 
 import org.apache.commons.lang.StringUtils;
@@ -19,7 +21,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class XtasRepository {
+public abstract class XtasRepository implements NamedEntityRecognitionRepository {
 	private static final String RUN_FROG_CONTEXT = "/run/frog";
 	private static final String RESULT_PATH = "/result/";
 
@@ -30,6 +32,11 @@ public class XtasRepository {
 	protected String apiKey;
 	protected String apiContext;
 	private ObjectMapper jsonMapper = new ObjectMapper();
+	private String xtasOutputType;
+	
+	public XtasRepository(String outputType) {
+	    this.xtasOutputType = outputType;
+	}
 	
 	private static class XtasPayload {
 	    @JsonProperty
@@ -51,7 +58,27 @@ public class XtasRepository {
             }
         }
 	}
-		
+	
+	abstract List<NamedEntity> parseXtasResponse(String xtasResponse) throws Exception;
+	
+	@Override
+    public List<NamedEntity> extract(String text) throws NamedEntityExtractionException {
+        List<NamedEntity> namedEntities = new LinkedList<>();
+        logger.info("Start extract(text)");
+        try {
+            String taskId = returnTaskId(text, xtasOutputType);
+            String result = getData(new URL(xtasUrl, taskId));
+            namedEntities = parseXtasResponse(result);
+        } catch (Exception e) {
+            String message = "Error during xtas extraction.";
+            logger.error(message, e);
+            throw new NamedEntityExtractionException(message, e);
+        }
+        
+        logger.info("End extract(text)");
+        return namedEntities;
+    }
+	
 	protected String returnTaskId(String text, String xtasOutputType)
 			throws Exception {
 		String taskId = null;
@@ -203,5 +230,40 @@ public class XtasRepository {
 
 		return response.toString();
 	}
+	
+	private String getData(final URL url) throws NamedEntityExtractionException {
+        StringBuilder response = new StringBuilder();
+        HttpURLConnection connection = null;
+        BufferedReader reader = null;
+        OutputStream outputStream = null;
+        try {
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setDoOutput(true);
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("Content-Type", "application/json");
+            reader = new BufferedReader(new InputStreamReader(
+                    connection.getInputStream()));
+            String line = null;
+            while ((line = reader.readLine()) != null)
+                response.append(line);
+        } catch (IOException e) {
+            String message = "Could not read from url '" + url + "'";
+            logger.error(message, e);
+            throw new NamedEntityExtractionException(message, e);
+        } finally {
+            try {
+                if (reader != null) {
+                    reader.close();
+                }
+                if (outputStream != null) {
+                    outputStream.close();
+                }
+            } catch (IOException e) {
+                logger.warn(e.getMessage(), e);
+            }
+        }
+
+        return response.toString();
+    }
 
 }
