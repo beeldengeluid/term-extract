@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
@@ -18,53 +17,70 @@ import nl.beng.termextract.extractor.repository.namedentity.NamedEntityType;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Repository;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-@Repository
-public class XtasRepository implements NamedEntityRecognitionRepository {
-
-	private static final int NUMBER_OF_TOKEN_LINE_COLUMNS = 10;
-	private static final int TOKEN_FIELD_POS = 1;
-	private static final int TOKEN_ENCODING_FIELD_POS = 6;
-
+public abstract class XtasRepository implements NamedEntityRecognitionRepository {
 	private static final String RUN_FROG_CONTEXT = "/run/frog";
 	private static final String RESULT_PATH = "/result/";
 
-	private static final Logger logger = LoggerFactory
+	protected static final Logger logger = LoggerFactory
 			.getLogger(XtasRepository.class);
 
-	private URL xtasUrl;
-	private String apiKey;
-	private String apiContext;
+	protected URL xtasUrl;
+	protected String apiKey;
+	protected String apiContext;
 	private ObjectMapper jsonMapper = new ObjectMapper();
-
-	public void setXtasUrl(String xtasUrl) throws MalformedURLException {
-		this.xtasUrl = new URL(xtasUrl);
-	}
-	public void setApiKey(String apiKey) {
-	    this.apiKey = apiKey;
-	}
-	public void setApiContext(String apiContext) {
-	    this.apiContext = apiContext;
+	private String xtasOutputType;
+	
+	public XtasRepository(String outputType) {
+	    this.xtasOutputType = outputType;
 	}
 	
 	private static class XtasPayload {
 	    @JsonProperty
 	    private String data;
+	    @JsonProperty
+	    private Arguments arguments;
 
-        public XtasPayload(String text) {
+        public XtasPayload(String text, String output) {
             this.data = text;
-        }   
+            arguments = new Arguments(output);
+        }
+        
+        private static class Arguments {
+            @JsonProperty
+            private String output;
+            
+            public Arguments(String output) {
+                this.output = output;
+            }
+        }
 	}
-		
+	
+	abstract List<NamedEntity> parseXtasResponse(String xtasResponse) throws Exception;
+	
 	@Override
-	public List<NamedEntity> extract(String text)
-			throws NamedEntityExtractionException {
-		logger.info("Start extract(text)");
-		List<NamedEntity> namedEntities = new LinkedList<>();
+    public List<NamedEntity> extract(String text) throws NamedEntityExtractionException {
+        List<NamedEntity> namedEntities = new LinkedList<>();
+        logger.info("Start extract(text)");
+        try {
+            String taskId = returnTaskId(text, xtasOutputType);
+            String result = getData(new URL(xtasUrl, taskId));
+            namedEntities = parseXtasResponse(result);
+        } catch (Exception e) {
+            String message = "Error during xtas extraction.";
+            logger.error(message, e);
+            throw new NamedEntityExtractionException(message, e);
+        }
+        
+        logger.info("End extract(text)");
+        return namedEntities;
+    }
+	
+	protected String returnTaskId(String text, String xtasOutputType)
+			throws Exception {
 		String taskId = null;
 		String resultPath = RESULT_PATH;
 		String contextPlusKey = RUN_FROG_CONTEXT;
@@ -73,64 +89,29 @@ public class XtasRepository implements NamedEntityRecognitionRepository {
 		    contextPlusKey = apiContext + contextPlusKey + apiKey;
 		    resultPath = apiContext + resultPath;
 		}
-		try {
-		    XtasPayload xtasPayloadObj = new XtasPayload(text); // just to make sure there is escaped quotes in there
-		    String xtasPayloadJson = jsonMapper.writeValueAsString(xtasPayloadObj);
-            logger.debug("payload:" + xtasPayloadJson);
+		
+		XtasPayload xtasPayloadObj = new XtasPayload(text, xtasOutputType); // just to make sure there is escaped quotes in there
+		String xtasPayloadJson = jsonMapper.writeValueAsString(xtasPayloadObj);
+        logger.debug("payload:" + xtasPayloadJson);
 		    
-			taskId = postData(new URL(xtasUrl, contextPlusKey), xtasPayloadJson);
-			logger.debug("xtas taskid:" + taskId);
-			if (useNewXtas) {
-			    taskId = taskId + apiKey;
-			}
-			String result = getData(new URL(xtasUrl, resultPath + taskId));
-			namedEntities = parseXtasResponse(result);
-		} catch (Exception e) {
-			String message = "Error during xtas extraction.";
-			logger.error(message, e);
-			throw new NamedEntityExtractionException(message, e);
-		} 
-		logger.info("End extract(text)");
-		return namedEntities;
+		taskId = postData(new URL(xtasUrl, contextPlusKey), xtasPayloadJson);
+		logger.debug("xtas taskid:" + taskId);
+		if (useNewXtas) {
+		    taskId = taskId + apiKey;
+		}			
+		return resultPath + taskId;
 	}
 
-	private List<NamedEntity> parseXtasResponse(String xtasResponseString)
-			throws NamedEntityExtractionException {
-		List<NamedEntity> namedEntities = new LinkedList<>();
-		ObjectMapper mapper = new ObjectMapper();
-		try {
-			logger.debug(xtasResponseString);
-			String[] responseArray = mapper.readValue(xtasResponseString,
-					String[].class);
-			for (String responseItem : responseArray) {
-				if (StringUtils.isNotBlank(responseItem)) {
-					String responseItemFields[] = responseItem.split("	", -1);
-					if (responseItemFields.length == NUMBER_OF_TOKEN_LINE_COLUMNS) {
-						String tokens = responseItemFields[TOKEN_FIELD_POS];
-						String tokenEncoding = responseItemFields[TOKEN_ENCODING_FIELD_POS];
-						namedEntities.addAll(parse(tokens, tokenEncoding));
-					}
-				}
-			}
-		} catch (Exception e) {
-			String message = "Unable to parse xtas response '"
-					+ xtasResponseString + "'";
-			logger.error(message, e);
-			throw new NamedEntityExtractionException(message, e);
-		}
-		return namedEntities;
-	}
-
-	private List<NamedEntity> parse(String tokens, String tokenEncoding) {
-		List<NamedEntity> namedEntities = new LinkedList<>();
+	protected void parse(String tokens, String tokenEncoding, List<NamedEntity> namedEntities) {
 		String[] tokenArray = tokens.split("_");
 		String[] tokenEncodingArray = tokenEncoding.split("_");
 		int index = 0;
+		boolean mergeWithPrevious = false;
 		NamedEntity namedEntity = null;
 		if (tokenArray.length != tokenEncodingArray.length) {
 			logger.warn("Tokens '" + tokens + "' do not match token '"
 					+ tokenEncoding + "' encoding.");
-			return null;
+			return;
 		}
 		for (String token : tokenArray) {
 			String encoding = tokenEncodingArray[index];
@@ -143,17 +124,19 @@ public class XtasRepository implements NamedEntityRecognitionRepository {
 							logger.debug("Named entity extracted '" + namedEntity + "'" );
 							// we already have a named entity
 							namedEntities.add(namedEntity);
+							if (mergeWithPrevious) {
+							    namedEntities.add(merge(namedEntities.get(namedEntities.size()-2), namedEntity));
+							    mergeWithPrevious = false;
+							}
 						}
-						NamedEntityType namedEntityType = extractNamedEntityType(type);
-						if (namedEntityType != null) {
-							namedEntity = new NamedEntity();
-							namedEntity.setType(namedEntityType);
-							namedEntity.setText(token);
-						}
+						namedEntity = createNamedEntity(token, type);
 					} else if (tag.equals("I")) {
 						if (namedEntity != null) {
 							namedEntity.setText(namedEntity.getText() + " "
 									+ token);
+						} else {
+						    namedEntity = createNamedEntity(token, type);
+						    mergeWithPrevious = true;
 						}
 					}
 				}
@@ -163,8 +146,29 @@ public class XtasRepository implements NamedEntityRecognitionRepository {
 		if (namedEntity != null) {
 			logger.debug("Named entity extracted '" + namedEntity + "'" );
 			namedEntities.add(namedEntity);
+			if (mergeWithPrevious) {
+                namedEntities.add(merge(namedEntities.get(namedEntities.size()-2), namedEntity));
+			}
 		}
-		return namedEntities;
+	}
+	
+	private NamedEntity createNamedEntity(String token, String type) {
+	    NamedEntity namedEntity = null;
+	    NamedEntityType namedEntityType = extractNamedEntityType(type);
+        if (namedEntityType != null) {
+            namedEntity = new NamedEntity();
+            namedEntity.setType(namedEntityType);
+            namedEntity.setText(token);
+        }
+        return namedEntity;
+	}
+	
+	private NamedEntity merge(NamedEntity previous, NamedEntity current) {
+	    NamedEntity namedEntity = new NamedEntity();
+	    namedEntity.setText(previous.getText() + " " + current.getText());
+	    namedEntity.setType(previous.getType());
+	    logger.debug("Named entity extracted '" + namedEntity + "'" );
+	    return namedEntity;
 	}
 
 	private NamedEntityType extractNamedEntityType(String type) {
@@ -226,39 +230,40 @@ public class XtasRepository implements NamedEntityRecognitionRepository {
 
 		return response.toString();
 	}
-
+	
 	private String getData(final URL url) throws NamedEntityExtractionException {
-		StringBuilder response = new StringBuilder();
-		HttpURLConnection connection = null;
-		BufferedReader reader = null;
-		OutputStream outputStream = null;
-		try {
-			connection = (HttpURLConnection) url.openConnection();
-			connection.setDoOutput(true);
-			connection.setRequestMethod("GET");
-			connection.setRequestProperty("Content-Type", "application/json");
-			reader = new BufferedReader(new InputStreamReader(
-					connection.getInputStream()));
-			String line = null;
-			while ((line = reader.readLine()) != null)
-				response.append(line);
-		} catch (IOException e) {
-			String message = "Could not read from url '" + url + "'";
-			logger.error(message, e);
-			throw new NamedEntityExtractionException(message, e);
-		} finally {
-			try {
-				if (reader != null) {
-					reader.close();
-				}
-				if (outputStream != null) {
-					outputStream.close();
-				}
-			} catch (IOException e) {
-				logger.warn(e.getMessage(), e);
-			}
-		}
+        StringBuilder response = new StringBuilder();
+        HttpURLConnection connection = null;
+        BufferedReader reader = null;
+        OutputStream outputStream = null;
+        try {
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setDoOutput(true);
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("Content-Type", "application/json");
+            reader = new BufferedReader(new InputStreamReader(
+                    connection.getInputStream()));
+            String line = null;
+            while ((line = reader.readLine()) != null)
+                response.append(line);
+        } catch (IOException e) {
+            String message = "Could not read from url '" + url + "'";
+            logger.error(message, e);
+            throw new NamedEntityExtractionException(message, e);
+        } finally {
+            try {
+                if (reader != null) {
+                    reader.close();
+                }
+                if (outputStream != null) {
+                    outputStream.close();
+                }
+            } catch (IOException e) {
+                logger.warn(e.getMessage(), e);
+            }
+        }
 
-		return response.toString();
-	}
+        return response.toString();
+    }
+
 }

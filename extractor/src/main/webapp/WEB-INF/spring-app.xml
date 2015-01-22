@@ -14,6 +14,7 @@
 		<property name="ignoreResourceNotFound" value="true" />
 		<property name="searchSystemEnvironment" value="true" />
 		<property name="systemPropertiesMode" value="2" />
+		<property name="nullValue" value="@null"/>
 		<property name="placeholderPrefix" value="${" />
 		<property name="locations">
 			<list>
@@ -34,18 +35,6 @@
 	<bean name="elasticsearchTemplate"
 		class="org.springframework.data.elasticsearch.core.ElasticsearchTemplate">
 		<constructor-arg name="client" ref="client" />
-	</bean>
-	
-	<bean id="labs-xtas" class="nl.beng.termextract.extractor.repository.namedentity.impl.XtasRepository">
-	  <property name="xtasUrl" value="${nl.beng.termextract.namedentity.xtas.904labs.url}"/>
-	  <property name="apiKey" value="${nl.beng.termextract.namedentity.xtas.apikey}"/>
-	  <property name="apiContext" value="${nl.beng.termextract.namedentity.xtas.apicontext}"/>
-	</bean>
-	
-	<bean id="local-xtas" class="nl.beng.termextract.extractor.repository.namedentity.impl.XtasRepository">
-	   <property name="xtasUrl" value="${nl.beng.termextract.namedentity.xtas.local.url}"/>
-	   <property name="apiKey" value=""/>
-	   <property name="apiContext" value=""/>
 	</bean>
 
 </beans>
