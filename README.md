@@ -6,7 +6,7 @@ Term extractie uit de Gemeenschappelijke Thesaurus Audiovisuele Archieven en and
 
 #### Example termextract POST
 
-    The available values for "namedentity.repository" in the "settings" are :
+The available values for "namedentity.repository" in the "settings" are :
         "xtas" : for 904labas xtas
         "xtas-local" : for local xtas installed in beeldengeluid
         "cltl"
