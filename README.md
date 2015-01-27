@@ -3,14 +3,13 @@ term-extract
 
 Term extractie uit de Gemeenschappelijke Thesaurus Audiovisuele Archieven en andere bronnen.
 
-
-#### Example termextract POST
-
-The available values for "namedentity.repository" in the "settings" are :
+The available values for "namedentity.repository" in the "settings" can be 
 
         "xtas" : for 904labas xtas
         "xtas-local" : for local xtas installed in beeldengeluid
         "cltl"
+
+#### Example termextract POST
 
     curl -X POST http://labs-test.beeldengeluid.nl/termextract
      {
