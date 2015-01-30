@@ -11,8 +11,8 @@ The available values for "namedentity.repository" in the "settings" can be
 
 #### Example termextract POST
 
-    curl -X POST http://labs-test.beeldengeluid.nl/termextract
-     {
+    curl -H 'Content-Type: application/json' -X POST 'http://labs-test.beeldengeluid.nl/termextract' -d 
+    '{
     "settings": {
         "tokenizer.min.norm.frequency": "0.000004",
         "namedentity.organization.min.score": "8",
@@ -31,7 +31,8 @@ The available values for "namedentity.repository" in the "settings" can be
         "tokenizer.min.token.frequency": "2"
     },
     "text": "Mooie goal van Nistelrooy van Ruud. 1-0 voor Manchester United. John Jones Mary and Mr. J. J. Jones ran to         Washington. mensen"
-      }
+      }'
+      
       
      {
     "version": "1.1",
