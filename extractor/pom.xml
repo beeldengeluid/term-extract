@@ -90,6 +90,13 @@
 			<artifactId>guava</artifactId>
 		</dependency>
 
+        <!-- TextRazor java api -->
+        <dependency>
+            <groupId>com.textrazor</groupId>
+            <artifactId>textrazor</artifactId>
+            <version>1.0.2</version>
+        </dependency>
+        
 		<!-- Logging with Slf4j -->
 		<dependency>
 			<groupId>org.slf4j</groupId>

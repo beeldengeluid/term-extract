@@ -50,11 +50,8 @@ import com.google.common.collect.Multiset.Entry;
 public class ExtractorServiceImpl implements ExtractorService {
 
 	private static final String XTAS_LOCAL_REPOSITORY_NAME = "xtas-local";
-	
 	private static final String XTAS_904LABS_REPOSITORY_NAME = "xtas";
-
 	private static final String CLTL_REPOSITORY_NAME = "cltl";
-
 	private static final Logger logger = LoggerFactory
 			.getLogger(ExtractorServiceImpl.class);
 

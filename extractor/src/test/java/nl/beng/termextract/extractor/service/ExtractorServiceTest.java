@@ -11,7 +11,7 @@ import org.junit.Assert;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 
 /*@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations = { "classpath:extractor-test-application.xml" })
+@ContextConfiguration(locations = { "classpath:spring-app.xml", "classpath:service-settings.xml" })
 */public class ExtractorServiceTest {
 
 //	@Autowired

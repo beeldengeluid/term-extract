@@ -7,6 +7,7 @@ The available values for "namedentity.repository" in the "settings" can be
 
         "xtas" : for 904labas xtas
         "xtas-local" : for local xtas installed in beeldengeluid
+        "textrazor" : for TextRazor service
         "cltl"
 
 #### Example termextract POST
