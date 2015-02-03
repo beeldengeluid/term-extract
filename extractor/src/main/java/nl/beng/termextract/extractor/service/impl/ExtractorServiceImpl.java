@@ -1,16 +1,16 @@
 package nl.beng.termextract.extractor.service.impl;
 
 import static com.google.common.collect.Maps.newHashMap;
+import static java.lang.Integer.parseInt;
+import static org.apache.commons.io.IOUtils.readLines;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.InputStream;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +46,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
 import com.google.common.collect.HashMultiset;
@@ -65,7 +66,7 @@ public class ExtractorServiceImpl implements ExtractorService, ApplicationContex
     private Settings defaultSettings;
     private Map<String, NamedEntityRecognitionRepository> namedEntityRepositories = newHashMap();
 
-	private Map<String, Integer> wordFrequencyMap;
+    private Map<String, Integer> wordFrequencyMap = newHashMap();
 	private CharArraySet stopwordsSet;
 
     @Autowired
@@ -83,25 +84,13 @@ public class ExtractorServiceImpl implements ExtractorService, ApplicationContex
     }
 
 	@Value("${nl.beng.termextract.tokenizer.wordfrequency.file}")
-	public void setWordFrequencyMap(final String wordFrequencyFileName)
-			throws NumberFormatException, IOException {
-		wordFrequencyMap = new HashMap<>();
-		BufferedReader reader = null;
-		try {
-			reader = new BufferedReader(new InputStreamReader(Thread
-					.currentThread().getContextClassLoader()
-					.getResourceAsStream(wordFrequencyFileName)));
-			String line = null;
-			while ((line = reader.readLine()) != null) {
-				String[] words = line.split(";");
-				wordFrequencyMap.put(words[0], Integer.parseInt(words[1]));
-			}
-		} finally {
-			if (reader != null) {
-				reader.close();
-			}
+    public void setWordFrequencyMap(Resource wordFrequencies) throws NumberFormatException, IOException {
+        try (InputStream is = wordFrequencies.getInputStream()) {
+            for (String line : readLines(is, "UTF-8")) {
+                String[] words = line.split(";");
+                wordFrequencyMap.put(words[0], parseInt(words[1]));
+            }
 		}
-
 	}
 
 	@Value("${nl.beng.termextract.tokenizer.stopwords}")

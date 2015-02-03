@@ -46,7 +46,7 @@ public class TextRazorRepository implements NamedEntityRecognitionRepository {
         return foundEntities;
     }
 
-    private NamedEntity convert(Entity entity) {
+    private NamedEntity convert(Entity entity) throws NamedEntityExtractionException {
         NamedEntity namedEntity = new NamedEntity();
         namedEntity.setText(entity.getMatchedText());
 
@@ -54,7 +54,7 @@ public class TextRazorRepository implements NamedEntityRecognitionRepository {
         if (convertedType != null) {
             namedEntity.setType(valueOf(convertedType));
         } else {
-            LOG.warn("No GTAA type found for any of TextRazor types: {}", entity.getType());
+            throw new NamedEntityExtractionException("No GTAA type found for any of TextRazor types: " + entity.getType(), null);
         }
         return namedEntity;
     }
