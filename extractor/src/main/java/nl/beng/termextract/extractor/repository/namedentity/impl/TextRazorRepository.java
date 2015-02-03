@@ -12,8 +12,6 @@ import nl.beng.termextract.extractor.repository.namedentity.NamedEntity;
 import nl.beng.termextract.extractor.repository.namedentity.NamedEntityExtractionException;
 import nl.beng.termextract.extractor.repository.namedentity.NamedEntityRecognitionRepository;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -25,7 +23,6 @@ import com.textrazor.annotations.Entity;
 @Repository
 public class TextRazorRepository implements NamedEntityRecognitionRepository {
     public static final ResourceBundle ENTITY_MAP = getBundle("textrazor_entities");
-    private static final Logger LOG = LoggerFactory.getLogger(TextRazorRepository.class);
 
     @Autowired
     private TextRazor client;
