@@ -40,7 +40,6 @@ public class TextRazorRepository implements NamedEntityRecognitionRepository {
                 }
             }
         } catch (NetworkException | AnalysisException e) {
-            logger.error("Error while calling TextRazor...");
             throw new NamedEntityExtractionException(e.getMessage(), e);
         }
         return foundEntities;

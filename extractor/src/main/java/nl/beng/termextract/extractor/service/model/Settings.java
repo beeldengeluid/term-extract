@@ -13,14 +13,14 @@ public class Settings {
 	private static final Logger logger = LoggerFactory
 			.getLogger(Settings.class);
 
-	private static final String TOKENIZER_MIN_GRAM = "tokenizer.min.gram";
-	private static final String TOKENIZER_MAX_GRAM = "tokenizer.max.gram";
-	private static final String TOKENIZER_MIN_NORM_FREQUENCY = "tokenizer.min.norm.frequency";
-	private static final String TOKENIZER_MIN_TOKEN_FREQUENCY = "tokenizer.min.token.frequency";
-	private static final String TOKENIZER_MIN_SCORE = "tokenizer.min.score";
-	private static final String NAMEDENTITY_MIN_TOKEN_FREQUENCY = "namedentity.{0}.min.token.frequency";
-	private static final String NAMEDENTITY_MIN_SCORE = "namedentity.{0}.min.score";
-	private static final String NAMEDENTITY_REPOSITORY = "namedentity.repository";
+    public static final String TOKENIZER_MIN_GRAM = "tokenizer.min.gram";
+    public static final String TOKENIZER_MAX_GRAM = "tokenizer.max.gram";
+    public static final String TOKENIZER_MIN_NORM_FREQUENCY = "tokenizer.min.norm.frequency";
+    public static final String TOKENIZER_MIN_TOKEN_FREQUENCY = "tokenizer.min.token.frequency";
+    public static final String TOKENIZER_MIN_SCORE = "tokenizer.min.score";
+    public static final String NAMEDENTITY_MIN_TOKEN_FREQUENCY = "namedentity.{0}.min.token.frequency";
+    public static final String NAMEDENTITY_MIN_SCORE = "namedentity.{0}.min.score";
+    public static final String NAMEDENTITY_REPOSITORY = "namedentity.repository";
 
 	private Properties properties = new Properties();
 
