@@ -1,6 +1,7 @@
 package nl.beng.termextract.extractor.repository.namedentity.impl;
 
 import static java.util.ResourceBundle.getBundle;
+import static nl.beng.termextract.extractor.repository.namedentity.NamedEntityType.MISC;
 import static nl.beng.termextract.extractor.repository.namedentity.NamedEntityType.valueOf;
 
 import java.util.ArrayList;
@@ -23,11 +24,11 @@ import com.textrazor.annotations.Entity;
 
 @Repository
 public class TextRazorRepository implements NamedEntityRecognitionRepository {
-    private static final Logger logger = LoggerFactory.getLogger(TextRazorRepository.class);
+    public static final ResourceBundle ENTITY_MAP = getBundle("textrazor_entities");
+    private static final Logger LOG = LoggerFactory.getLogger(TextRazorRepository.class);
 
     @Autowired
     private TextRazor client;
-    private ResourceBundle entities = getBundle("textrazor_entities");
 
     @Override
     public List<NamedEntity> extract(String text) throws NamedEntityExtractionException {
@@ -53,7 +54,7 @@ public class TextRazorRepository implements NamedEntityRecognitionRepository {
         if (convertedType != null) {
             namedEntity.setType(valueOf(convertedType));
         } else {
-            logger.warn("No GTAA type found for any of TextRazor types: {}", entity.getType());
+            LOG.warn("No GTAA type found for any of TextRazor types: {}", entity.getType());
         }
         return namedEntity;
     }
@@ -61,9 +62,11 @@ public class TextRazorRepository implements NamedEntityRecognitionRepository {
     private String convertType(List<String> types) {
         String convertedType = null;
         for (String type : types) {
-            if (entities.containsKey(type)) {
-                convertedType = entities.getString(type);
-                break;
+            if (ENTITY_MAP.containsKey(type)) {
+                convertedType = ENTITY_MAP.getString(type);
+                if (valueOf(convertedType) != MISC) {
+                    break;
+                }
             }
         }
         return convertedType;
