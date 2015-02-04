@@ -26,15 +26,22 @@
 	</bean>
 
 	<context:component-scan base-package="nl.beng.termextract.extractor.repository" />
+    <context:component-scan base-package="nl.beng.termextract.extractor.service" />
 
 	<elasticsearch:repositories base-package="nl.beng.termextract.extractor.repository" />
 
-	<elasticsearch:transport-client id="client"
-		cluster-nodes="${nl.beng.gtaa.elasticsearch.nodes}" cluster-name="${nl.beng.gtaa.elasticsearch.clustername}" />
+	<elasticsearch:transport-client id="client" 
+        cluster-nodes="${nl.beng.gtaa.elasticsearch.nodes}" cluster-name="${nl.beng.gtaa.elasticsearch.clustername}" />
 
-	<bean name="elasticsearchTemplate"
-		class="org.springframework.data.elasticsearch.core.ElasticsearchTemplate">
+	<bean name="elasticsearchTemplate" 
+        class="org.springframework.data.elasticsearch.core.ElasticsearchTemplate">
 		<constructor-arg name="client" ref="client" />
 	</bean>
+
+    <bean name="textRazorClient" class="com.textrazor.TextRazor">
+        <constructor-arg value="${nl.beng.termextract.namedentity.textrazor.apikey}" />
+        <property name="doEncryption" value="true" />
+        <property name="extractors" value="entities" />
+    </bean>
 
 </beans>
