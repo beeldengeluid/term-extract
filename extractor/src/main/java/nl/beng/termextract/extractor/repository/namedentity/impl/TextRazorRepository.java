@@ -1,5 +1,6 @@
 package nl.beng.termextract.extractor.repository.namedentity.impl;
 
+import static com.google.common.collect.Sets.newHashSet;
 import static java.util.ResourceBundle.getBundle;
 import static nl.beng.termextract.extractor.repository.namedentity.NamedEntityType.MISC;
 import static nl.beng.termextract.extractor.repository.namedentity.NamedEntityType.valueOf;
@@ -8,6 +9,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.Set;
 
 import nl.beng.termextract.extractor.repository.namedentity.NamedEntity;
 import nl.beng.termextract.extractor.repository.namedentity.NamedEntityExtractionException;
@@ -32,20 +34,22 @@ public class TextRazorRepository implements NamedEntityRecognitionRepository {
 
     @Override
     public List<NamedEntity> extract(String text) throws NamedEntityExtractionException {
-        List<NamedEntity> foundEntities = new ArrayList<NamedEntity>();
+        Set<NamedEntity> foundEntities = newHashSet();
         try {
             List<Entity> textRazorEntities = client.analyze(text).getResponse().getEntities();
             if (textRazorEntities != null) {
                 for (Entity entity : textRazorEntities) {
                     if (entity.getType() != null) {
                         foundEntities.add(convert(entity));
+                    } else {
+                        LOG.warn("No DBPedia types found for entity with text: [{}]", entity.getMatchedText());
                     }
                 }
             }
         } catch (NetworkException | AnalysisException e) {
             throw new NamedEntityExtractionException(e.getMessage(), e);
         }
-        return foundEntities;
+        return new ArrayList<NamedEntity>(foundEntities);
     }
 
     private NamedEntity convert(Entity entity) throws NamedEntityExtractionException {
