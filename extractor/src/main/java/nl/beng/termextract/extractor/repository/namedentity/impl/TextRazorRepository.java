@@ -58,11 +58,13 @@ public class TextRazorRepository implements NamedEntityRecognitionRepository {
 
     private String convertType(List<String> types) {
         String convertedType = null;
-        for (String type : types) {
-            if (ENTITY_MAP.containsKey(type)) {
-                convertedType = ENTITY_MAP.getString(type);
-                if (valueOf(convertedType) != MISC) {
-                    break;
+        if (types != null) {
+            for (String type : types) {
+                if (ENTITY_MAP.containsKey(type)) {
+                    convertedType = ENTITY_MAP.getString(type);
+                    if (valueOf(convertedType) != MISC) {
+                        break;
+                    }
                 }
             }
         }
