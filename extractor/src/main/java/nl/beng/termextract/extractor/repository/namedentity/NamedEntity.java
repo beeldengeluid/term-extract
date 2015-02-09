@@ -48,5 +48,5 @@ public class NamedEntity {
         if (type != other.type) return false;
         return true;
     }
-	
+
 }

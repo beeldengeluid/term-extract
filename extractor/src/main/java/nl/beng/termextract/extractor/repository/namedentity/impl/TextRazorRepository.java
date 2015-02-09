@@ -1,5 +1,6 @@
 package nl.beng.termextract.extractor.repository.namedentity.impl;
 
+import static com.google.common.collect.Maps.newHashMap;
 import static com.google.common.collect.Sets.newHashSet;
 import static java.util.ResourceBundle.getBundle;
 import static nl.beng.termextract.extractor.repository.namedentity.NamedEntityType.MISC;
@@ -8,8 +9,8 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
-import java.util.Set;
 
 import nl.beng.termextract.extractor.repository.namedentity.NamedEntity;
 import nl.beng.termextract.extractor.repository.namedentity.NamedEntityExtractionException;
@@ -34,25 +35,28 @@ public class TextRazorRepository implements NamedEntityRecognitionRepository {
 
     @Override
     public List<NamedEntity> extract(String text) throws NamedEntityExtractionException {
-        Set<NamedEntity> foundEntities = newHashSet();
+        List<NamedEntity> foundEntities = new ArrayList<>();
+        Map<String, Entity> entitiesWithoutDBPediaType = newHashMap();
+        Map<String, Entity> entitiesWithUnknownDBPediaType = newHashMap();
         try {
             List<Entity> textRazorEntities = client.analyze(text).getResponse().getEntities();
             if (textRazorEntities != null) {
                 for (Entity entity : textRazorEntities) {
                     if (entity.getType() != null) {
-                        foundEntities.add(convert(entity));
+                        foundEntities.add(convert(entity, entitiesWithUnknownDBPediaType));
                     } else {
-                        LOG.warn("No DBPedia types found for entity with text: [{}]", entity.getMatchedText());
+                        entitiesWithoutDBPediaType.put(entity.getMatchedText(), entity);
                     }
                 }
             }
         } catch (NetworkException | AnalysisException e) {
             throw new NamedEntityExtractionException(e.getMessage(), e);
         }
-        return new ArrayList<NamedEntity>(foundEntities);
+        logEntitiesTypeConversionResults(entitiesWithoutDBPediaType, entitiesWithUnknownDBPediaType, foundEntities);
+        return foundEntities;
     }
 
-    private NamedEntity convert(Entity entity) throws NamedEntityExtractionException {
+    private NamedEntity convert(Entity entity, Map<String, Entity> entitiesWithUnknownDBPediaType) throws NamedEntityExtractionException {
         NamedEntity namedEntity = new NamedEntity();
         namedEntity.setText(entity.getMatchedText());
 
@@ -61,7 +65,7 @@ public class TextRazorRepository implements NamedEntityRecognitionRepository {
             namedEntity.setType(valueOf(convertedType));
         } else {
             namedEntity.setType(MISC);
-            LOG.warn("No GTAA type found for any of TextRazor types: " + entity.getType() + " setting default type MISC...");
+            entitiesWithUnknownDBPediaType.put(entity.getMatchedText(), entity);
         }
         return namedEntity;
     }
@@ -77,5 +81,30 @@ public class TextRazorRepository implements NamedEntityRecognitionRepository {
             }
         }
         return convertedType;
+    }
+
+    private void logEntitiesTypeConversionResults(Map<String, Entity> entitiesWithoutDBPediaType, Map<String, Entity> entitiesWithUnknownDBPediaType,
+            List<NamedEntity> foundEntities) {
+        if (!entitiesWithoutDBPediaType.isEmpty()) {
+            LOG.warn("Skipped {} unique entities without DBPedia type.", entitiesWithoutDBPediaType.size());
+            int numberOfEntitiesWithoutFreebaseType = 0;
+            for (String entityText : entitiesWithoutDBPediaType.keySet()) {
+                if (entitiesWithoutDBPediaType.get(entityText).getFreebaseTypes() == null) {
+                    numberOfEntitiesWithoutFreebaseType++;
+                }
+            }
+            LOG.warn("Of which {} entities don't have Freebase types either... ", numberOfEntitiesWithoutFreebaseType);
+            for (String entityText : entitiesWithoutDBPediaType.keySet()) {
+                LOG.warn("\tEntity text: {} \t\t\t\t Freebase types: {}", entityText, entitiesWithoutDBPediaType.get(entityText).getFreebaseTypes());
+            }
+        }
+        if (!entitiesWithUnknownDBPediaType.isEmpty()) {
+            LOG.warn("Found {} unique entit(y)(ies) with unknown DBPedia type:", entitiesWithUnknownDBPediaType.size());
+            for (String entityText : entitiesWithUnknownDBPediaType.keySet()) {
+                LOG.warn("\tTextRazor entity type(s): {}, matched text: {}", entitiesWithUnknownDBPediaType.get(entityText).getType(), entityText);
+            }
+        }
+        LOG.info("Converted types of {} TextRazor entities.", foundEntities.size());
+        LOG.info("Converted types of {} unique TextRazor entities.", newHashSet(foundEntities).size());
     }
 }
