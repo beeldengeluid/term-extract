@@ -61,6 +61,7 @@ public class ExtractorServiceImpl implements ExtractorService, ApplicationContex
     public static final String CLTL_REPOSITORY_NAME = "cltl";
     public static final String TEXTRAZOR_REPOSITORY_NAME = "textrazor";
     private static final Logger LOG = getLogger(ExtractorServiceImpl.class);
+    private static final String GTAA_PREFIX = "GTAA_";
 
 	private GtaaRepository gtaaRepository;
     private Settings defaultSettings;
@@ -178,7 +179,7 @@ public class ExtractorServiceImpl implements ExtractorService, ApplicationContex
 
 	private Match createMatch(GtaaDocument document) {
 		Match match = new Match();
-		match.setType(document.getType().toValue());
+		match.setType(GTAA_PREFIX + document.getType().toValue());
 		match.setUri(document.getUri());
 		match.setPrefLabel(document.getPrefLabel());
 		match.setAltLabel(document.getAltLabel());
