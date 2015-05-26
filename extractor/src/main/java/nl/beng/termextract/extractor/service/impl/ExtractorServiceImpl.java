@@ -1,10 +1,5 @@
 package nl.beng.termextract.extractor.service.impl;
 
-import static com.google.common.collect.Maps.newHashMap;
-import static java.lang.Integer.parseInt;
-import static org.apache.commons.io.IOUtils.readLines;
-import static org.slf4j.LoggerFactory.getLogger;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.MessageFormat;
@@ -17,6 +12,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.Multiset.Entry;
 import nl.beng.gtaa.model.GtaaDocument;
 import nl.beng.gtaa.model.GtaaType;
 import nl.beng.termextract.extractor.repository.gtaa.GtaaRepository;
@@ -48,9 +46,11 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Multiset;
-import com.google.common.collect.Multiset.Entry;
+
+import static com.google.common.collect.Maps.newHashMap;
+import static java.lang.Integer.parseInt;
+import static org.apache.commons.io.IOUtils.readLines;
+import static org.slf4j.LoggerFactory.getLogger;
 
 @Service
 public class ExtractorServiceImpl implements ExtractorService, ApplicationContextAware {
