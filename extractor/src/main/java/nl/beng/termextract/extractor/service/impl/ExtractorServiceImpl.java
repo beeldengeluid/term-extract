@@ -1,21 +1,20 @@
 package nl.beng.termextract.extractor.service.impl;
 
-import static com.google.common.collect.Maps.newHashMap;
-import static java.lang.Integer.parseInt;
-import static org.apache.commons.io.IOUtils.readLines;
-import static org.slf4j.LoggerFactory.getLogger;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.Multiset.Entry;
 import nl.beng.gtaa.model.GtaaDocument;
 import nl.beng.gtaa.model.GtaaType;
 import nl.beng.termextract.extractor.repository.gtaa.GtaaRepository;
@@ -35,7 +34,6 @@ import nl.beng.termextract.extractor.service.impl.algorithm.NGramAnalyzer;
 import nl.beng.termextract.extractor.service.model.ExtractResponse;
 import nl.beng.termextract.extractor.service.model.Match;
 import nl.beng.termextract.extractor.service.model.Settings;
-
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
@@ -49,9 +47,10 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Multiset;
-import com.google.common.collect.Multiset.Entry;
+import static com.google.common.collect.Maps.newHashMap;
+import static java.lang.Integer.parseInt;
+import static org.apache.commons.io.IOUtils.readLines;
+import static org.slf4j.LoggerFactory.getLogger;
 
 @Service
 public class ExtractorServiceImpl implements ExtractorService, ApplicationContextAware {
@@ -61,7 +60,6 @@ public class ExtractorServiceImpl implements ExtractorService, ApplicationContex
     public static final String CLTL_REPOSITORY_NAME = "cltl";
     public static final String TEXTRAZOR_REPOSITORY_NAME = "textrazor";
     private static final Logger LOG = getLogger(ExtractorServiceImpl.class);
-    private static final String GTAA_PREFIX = "GTAA_";
 
 	private GtaaRepository gtaaRepository;
     private Settings defaultSettings;
@@ -69,6 +67,14 @@ public class ExtractorServiceImpl implements ExtractorService, ApplicationContex
 
     private Map<String, Integer> wordFrequencyMap = newHashMap();
 	private CharArraySet stopwordsSet;
+	
+	private static final Map<GtaaType, String> gtaaOutput = new HashMap<>();
+	static {
+	    gtaaOutput.put(GtaaType.GEOGRAFISCHENAMEN, "GTAA_geografischenamen");
+	    gtaaOutput.put(GtaaType.NAMEN, "GTAA_namen");
+	    gtaaOutput.put(GtaaType.ONDERWERPEN, "GTAA_onderwerpen");
+	    gtaaOutput.put(GtaaType.PERSOONSNAMEN, "GTAA_personen");
+	}
 
     @Autowired
     public ExtractorServiceImpl(GtaaRepository gtaaRepository, Settings defaultSettings) {
@@ -179,7 +185,7 @@ public class ExtractorServiceImpl implements ExtractorService, ApplicationContex
 
 	private Match createMatch(GtaaDocument document) {
 		Match match = new Match();
-		match.setType(GTAA_PREFIX + document.getType().toValue());
+		match.setType(gtaaOutput.get(document.getType()));
 		match.setUri(document.getUri());
 		match.setPrefLabel(document.getPrefLabel());
 		match.setAltLabel(document.getAltLabel());
