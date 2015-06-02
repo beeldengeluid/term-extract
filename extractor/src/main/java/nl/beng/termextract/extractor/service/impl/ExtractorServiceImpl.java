@@ -70,10 +70,10 @@ public class ExtractorServiceImpl implements ExtractorService, ApplicationContex
 	
 	private static final Map<GtaaType, String> gtaaOutput = new HashMap<>();
 	static {
-	    gtaaOutput.put(GtaaType.GEOGRAFISCHENAMEN, "GTAA_geografischenamen");
-	    gtaaOutput.put(GtaaType.NAMEN, "GTAA_namen");
-	    gtaaOutput.put(GtaaType.ONDERWERPEN, "GTAA_onderwerpen");
-	    gtaaOutput.put(GtaaType.PERSOONSNAMEN, "GTAA_personen");
+	    gtaaOutput.put(GtaaType.GEOGRAFISCHENAMEN, "GTAA_GeografischeNamen");
+	    gtaaOutput.put(GtaaType.NAMEN, "GTAA_Namen");
+	    gtaaOutput.put(GtaaType.ONDERWERPEN, "GTAA_Onderwerpen");
+	    gtaaOutput.put(GtaaType.PERSOONSNAMEN, "GTAA_Personen");
 	}
 
     @Autowired
