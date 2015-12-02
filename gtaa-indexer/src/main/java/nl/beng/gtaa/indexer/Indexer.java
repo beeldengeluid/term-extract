@@ -35,7 +35,7 @@ import se.kb.oai.pmh.RecordsList;
 @Component(value = "indexer")
 public class Indexer {
 
-	private static final String INITIAL_FROM_DATE = "2012-10-01T12:00:00";
+	private static final String INITIAL_FROM_DATE = "2012-10-01T12:00:00Z";
 	private static final String GTAA_GEOGRAFISCHE_NAMEN_SCHEME = "http://data.beeldengeluid.nl/gtaa/GeografischeNamen";
 	private static final String GTAA_NAMEN_SCHEME = "http://data.beeldengeluid.nl/gtaa/Namen";
 	private static final String GTAA_PERSOONSNAMEN_SCHEME = "http://data.beeldengeluid.nl/gtaa/Persoonsnamen";
@@ -47,12 +47,14 @@ public class Indexer {
 	private static final String RESOURCE_ATTRIBUTE = "resource";
 	private static final String URI_ATTRIBUTE = "about";
 	private static final String DATE_ACCEPTED_ELEMENT = "dateAccepted";
+	private static final String STATUS_ELEMENT = "status";
+	private static final String APPROVED_STATUS = "approved";
 	private static final Logger logger = LoggerFactory.getLogger(Indexer.class);
 	private static final String INDEX_SETTINGS_PATH = "gtaa_settings.json";
 	private static final String INDEX_MAPPING_PATH = "gtaa_mappings.json";
 
 	protected static final DateTimeFormatter dateFormat = new DateTimeFormatterBuilder()
-			.appendPattern("yyyy-MM-dd'T'HH:mm:ss").toFormatter().withZoneUTC();
+			.appendPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").toFormatter().withZoneUTC();
 
 	@Autowired
 	private ElasticsearchTemplate template;
@@ -221,7 +223,8 @@ public class Indexer {
 				String conceptScheme = extractConceptScheme(data
 						.elements(IN_SCHEME_ELEMENT));
 				GtaaType type = extractGtaaType(conceptScheme);
-				if (type != null && dateAcceptedElement != null) {
+				String status = data.element(STATUS_ELEMENT).getText();
+				if (type != null && dateAcceptedElement != null && APPROVED_STATUS.equalsIgnoreCase(status)) {
 					gtaaDocument = new GtaaDocument();
 					String uri = uriAttribute.getText();
 					gtaaDocument.setType(type);
