@@ -69,6 +69,7 @@ public abstract class XtasRepository implements NamedEntityRecognitionRepository
             String taskId = returnTaskId(text, xtasOutputType);
             String result = getData(new URL(xtasUrl, taskId));
             namedEntities = parseXtasResponse(result);
+            logger.debug("number of extracted named entities are: " + String.valueOf(namedEntities.size()));
         } catch (Exception e) {
             String message = "Error during xtas extraction.";
             logger.error(message, e);
@@ -159,6 +160,7 @@ public abstract class XtasRepository implements NamedEntityRecognitionRepository
             namedEntity = new NamedEntity();
             namedEntity.setType(namedEntityType);
             namedEntity.setText(token);
+            logger.debug(String.format("Named entity with text %s and type %s is created.", namedEntity.getText(), namedEntity.getText()));
         }
         return namedEntity;
 	}
