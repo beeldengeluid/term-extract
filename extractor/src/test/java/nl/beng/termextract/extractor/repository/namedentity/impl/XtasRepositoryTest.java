@@ -83,7 +83,7 @@ public class XtasRepositoryTest {
 	@Test
 	public void testITagsFirstExtract() {
 	    try {
-            List<NamedEntity> namedEntities = localXtasRepository.extract("Stichting Lekker Dier");
+            List<NamedEntity> namedEntities = labsXtasRepository.extract("Stichting Lekker Dier");
             Assert.assertThat(namedEntities, Matchers.hasSize(3));
             Assert.assertThat(namedEntities.get(0).getText(), Matchers.is("Stichting"));
             Assert.assertThat(namedEntities.get(0).getType(), Matchers.equalTo(NamedEntityType.ORGANIZATION));
