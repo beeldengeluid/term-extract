@@ -35,7 +35,7 @@ import se.kb.oai.pmh.RecordsList;
 @Component(value = "indexer")
 public class Indexer {
 
-	private static final String INITIAL_FROM_DATE = "2012-10-01T12:00:00";
+	private static final String INITIAL_FROM_DATE = "2012-10-01T12:00:00Z";
 	private static final String GTAA_GEOGRAFISCHE_NAMEN_SCHEME = "http://data.beeldengeluid.nl/gtaa/GeografischeNamen";
 	private static final String GTAA_NAMEN_SCHEME = "http://data.beeldengeluid.nl/gtaa/Namen";
 	private static final String GTAA_PERSOONSNAMEN_SCHEME = "http://data.beeldengeluid.nl/gtaa/Persoonsnamen";
@@ -52,7 +52,7 @@ public class Indexer {
 	private static final String INDEX_MAPPING_PATH = "gtaa_mappings.json";
 
 	protected static final DateTimeFormatter dateFormat = new DateTimeFormatterBuilder()
-			.appendPattern("yyyy-MM-dd'T'HH:mm:ss").toFormatter().withZoneUTC();
+			.appendPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").toFormatter().withZoneUTC();
 
 	@Autowired
 	private ElasticsearchTemplate template;
