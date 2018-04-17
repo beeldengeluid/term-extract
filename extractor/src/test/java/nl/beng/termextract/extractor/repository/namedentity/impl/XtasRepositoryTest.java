@@ -5,9 +5,9 @@ import java.util.List;
 import nl.beng.termextract.extractor.repository.namedentity.NamedEntity;
 import nl.beng.termextract.extractor.repository.namedentity.NamedEntityExtractionException;
 import nl.beng.termextract.extractor.repository.namedentity.NamedEntityType;
-
 import org.hamcrest.Matchers;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +24,7 @@ public class XtasRepositoryTest {
 	private LabsXtasRepository labsXtasRepository;
 
 	@Test
+	@Ignore
 	public void testLocalXtasExtract() {
 		try {
 			List<NamedEntity> namedEntities = localXtasRepository.extract("Mooie goal van Ruud van Nistelrooy. 1-0 voor Manchester United. John Jones Mary and Mr. J. J. Jones ran to Washington.");
@@ -53,6 +54,7 @@ public class XtasRepositoryTest {
 	}
 	
 	@Test
+	@Ignore
 	public void testLabsXtasExtract() {
         try {
             List<NamedEntity> namedEntities = localXtasRepository.extract("Mooie goal van Ruud van Nistelrooy. 1-0 voor Manchester United. John Jones Mary and Mr. J. J. Jones ran to Washington.");
@@ -81,6 +83,7 @@ public class XtasRepositoryTest {
     }
 	
 	@Test
+	@Ignore
 	public void testITagsFirstExtract() {
 	    try {
             List<NamedEntity> namedEntities = localXtasRepository.extract("Stichting Lekker Dier");
