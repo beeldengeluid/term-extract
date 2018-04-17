@@ -24,6 +24,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public abstract class XtasRepository implements NamedEntityRecognitionRepository {
 	private static final String RUN_FROG_CONTEXT = "/run/frog";
 	private static final String RESULT_PATH = "/result/";
+	// 5 minutes timeout
+	private static final int TIMEOUT = 300000;
 
 	protected static final Logger logger = LoggerFactory
 			.getLogger(XtasRepository.class);
@@ -197,6 +199,8 @@ public abstract class XtasRepository implements NamedEntityRecognitionRepository
 		try {
 			byte[] postData = inputString.getBytes("UTF-8");
 			connection = (HttpURLConnection) url.openConnection();
+			connection.setConnectTimeout(TIMEOUT);
+			connection.setReadTimeout(TIMEOUT);
 			connection.setDoOutput(true);
 			connection.setRequestMethod("POST");
 			connection.setRequestProperty("Content-Type", "application/json"); // might need charset=utf-8 added in case they change the server platform (isn't accepted at time of writing this)
@@ -238,6 +242,8 @@ public abstract class XtasRepository implements NamedEntityRecognitionRepository
         OutputStream outputStream = null;
         try {
             connection = (HttpURLConnection) url.openConnection();
+			connection.setConnectTimeout(TIMEOUT);
+			connection.setReadTimeout(TIMEOUT);
             connection.setDoOutput(true);
             connection.setRequestMethod("GET");
             connection.setRequestProperty("Content-Type", "application/json");
