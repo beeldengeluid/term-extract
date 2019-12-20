@@ -7,7 +7,7 @@
 	<description>Term extractie uit Gemeenschappelijke Thesaurus Audiovisuele Archieven and other sources</description>
 	<packaging>pom</packaging>
 	<properties>
-		<spring.version>4.0.5.RELEASE</spring.version>
+		<spring.version>5.2.2.RELEASE</spring.version>
 		<oai.version>0.6b1</oai.version>
 		<elasticsearch.version>1.2.1</elasticsearch.version>
 		<elasticsearch.spring.version>1.1.0.M1</elasticsearch.spring.version>
